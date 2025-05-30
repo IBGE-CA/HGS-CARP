@@ -589,7 +589,10 @@ void Params::setPatterns_PCARP(Client * myCli)
 	}
 }
 
-Params::Params(string nomInstance, string nomSolution, string nomBKS, int seedRNG, int type, bool timeCapacitated, bool soft, int nbVeh, int nbDep, bool isSearchingFeasible, bool deadheadingArcs):type(type), timeCapacitated(timeCapacitated), softConstraints(soft), nbVehiculesPerDep(nbVeh), nbDepots(nbDep), isSearchingFeasible(isSearchingFeasible), deadheadingArcs(deadheadingArcs)
+Params::Params(const string& nomInstance, const string& nomSolution, const string& nomBKS, int seedRNG, int type,
+	bool timeCapacitated, bool soft, int nbVeh, int nbDep, bool isSearchingFeasible, bool deadheadingArcs) : 
+	type(type), timeCapacitated(timeCapacitated), softConstraints(soft), nbVehiculesPerDep(nbVeh), nbDepots(nbDep),
+	isSearchingFeasible(isSearchingFeasible), deadheadingArcs(deadheadingArcs)
 {
 	// Main constructor of Params
 	pathToInstance = nomInstance ;
