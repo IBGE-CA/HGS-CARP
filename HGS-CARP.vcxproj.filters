@@ -25,6 +25,9 @@
     <Filter Include="Source Files\algorithm">
       <UniqueIdentifier>{3bf2a83d-d5ad-4ece-9a2e-bbdd58ad4525}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\util">
+      <UniqueIdentifier>{cbf46f13-0890-4211-99f6-ca7c14540eeb}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Program\Client.cpp">
@@ -66,6 +69,15 @@
     <ClCompile Include="Program\CommandLineInterface.cpp">
       <Filter>Source Files\input</Filter>
     </ClCompile>
+    <ClCompile Include="Program\Data.cpp">
+      <Filter>Source Files\input</Filter>
+    </ClCompile>
+    <ClCompile Include="Program\Loader.cpp">
+      <Filter>Source Files\input</Filter>
+    </ClCompile>
+    <ClCompile Include="Program\InputUser.cpp">
+      <Filter>Source Files\input</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Program\Client.h">
@@ -102,6 +114,27 @@
       <Filter>Header Files\input</Filter>
     </ClInclude>
     <ClInclude Include="Program\CommandLineInterface.h">
+      <Filter>Header Files\input</Filter>
+    </ClInclude>
+    <ClInclude Include="Program\Singleton.h">
+      <Filter>Header Files\util</Filter>
+    </ClInclude>
+    <ClInclude Include="Program\InputUser.h">
+      <Filter>Header Files\input</Filter>
+    </ClInclude>
+    <ClInclude Include="Program\Edge.h">
+      <Filter>Header Files\input</Filter>
+    </ClInclude>
+    <ClInclude Include="Program\Node.h">
+      <Filter>Header Files\input</Filter>
+    </ClInclude>
+    <ClInclude Include="Program\Data.h">
+      <Filter>Header Files\input</Filter>
+    </ClInclude>
+    <ClInclude Include="Program\Loader.h">
+      <Filter>Header Files\input</Filter>
+    </ClInclude>
+    <ClInclude Include="Program\ProcessedData.h">
       <Filter>Header Files\input</Filter>
     </ClInclude>
   </ItemGroup>

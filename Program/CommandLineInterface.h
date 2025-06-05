@@ -1,9 +1,12 @@
 #pragma once
 
+#include "Singleton.h"
+
 #include <string>
 
-class CommandLineInterface
+class CommandLineInterface : public Singleton<CommandLineInterface>
 {
+	friend class Singleton<CommandLineInterface>;
 public:
 	CommandLineInterface();
 
@@ -33,6 +36,8 @@ public:
 	bool timeCapacitated;
 	bool softConstraints;
 	bool deadheadingArcs;
+
+	bool silent;
 
 private:
 	int getType(const std::string& type);

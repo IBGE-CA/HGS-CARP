@@ -19,6 +19,8 @@ CommandLineInterface::CommandLineInterface()
 	timeCapacitated = false;
 	softConstraints = false;
 	deadheadingArcs = false;
+
+	silent = false;
 }
 
 bool CommandLineInterface::load(int argc, char* argv[])

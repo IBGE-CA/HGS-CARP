@@ -2,6 +2,7 @@
 #include <string>
 
 #include "CommandLineInterface.h"
+#include "Loader.h"
 
 #include "Genetic.h"
 
@@ -9,29 +10,28 @@ using namespace std;
 
 int main(int argc, char* argv[])
 {
-	bool minFleetSize;
-	bool minMaxTour;
-	int nbpop = 0;
-	clock_t nb_ticks_allowed;
-	int veh;
-	double distConstraint;
-	int nbOverallLoop = 0;
-
 	try
 	{
 		CommandLineInterface cli;
 		if (!cli.load(argc, argv)) return -1;
 
 		// For the PCARP, we need to minimize fleet size as first objective, then minimize distance as second objective.
-		minFleetSize = (cli.type == CommandLineInterface::PCARP);
+		bool minFleetSize = (cli.type == CommandLineInterface::PCARP);
 		// For the MM-kWRPP, we need to minimize the length of the maximum route.
-		minMaxTour = (cli.type == CommandLineInterface::MM_kWRPP);
+		bool minMaxTour = (cli.type == CommandLineInterface::MM_kWRPP);
 
 		/* CLASSIC CASE OF OPTIMIZATION, BASED ON DISTANCE : for the CVRP, CARP, NEARP, MDCARP... */
 		/* THIS IS THE MAIN START OF THE PROGRAM */
 		if (!minFleetSize && !minMaxTour)
 		{
-			nb_ticks_allowed = cli.timeLimit * CLOCKS_PER_SEC;
+			clock_t nb_ticks_allowed = cli.timeLimit * CLOCKS_PER_SEC;
+
+			Loader loader;
+			if (!loader.load(cli.instanceFile))
+			{
+				cout << "Error while loading the instance file : " << cli.instanceFile << endl;
+				return -1;
+			}
 
 			// initialisation of the Parameters
 			Params mesParametres(cli.instanceFile, cli.outputFile, cli.bksFile, cli.seed, cli.type, cli.timeCapacitated,
@@ -51,18 +51,19 @@ int main(int argc, char* argv[])
 			return 0;
 		}
 
-
 		/* SOME PROBLEMS CONSIDERED IN THE PAPER INVOLVE ANOTHER OBJECTIVE, such as fleet size minimization, or minimization of the maximum tour */
 		/* THIS IS DONE HERE BY RUNNING ITERATIVELY THE ALGORITHM with a decreasing fleet or distance constraint */
 		// fleet size minimization (minFleetSize = true) -- applying the algorithm with a decreasing fleet size, as long as a feasible solution is found
 		// or minimization of the maximum tour (minMaxTour = true) -- applying the algorithm with a decreasing tour duration constraint
 		else
 		{
-			veh = cli.nbVeh; // start with an upper bound on the number of vehicles
-			nb_ticks_allowed = cli.timeLimit * CLOCKS_PER_SEC;
-			distConstraint = 1.e30; // or with a permissive distance constraint
+			int veh = cli.nbVeh; // start with an upper bound on the number of vehicles
+			clock_t nb_ticks_allowed = cli.timeLimit * CLOCKS_PER_SEC;
+			double distConstraint = 1.e30; // or with a permissive distance constraint
 			bool validExist = true;
 
+			int nbpop = 0;
+			int nbOverallLoop = 0; 
 			vector<Params> mesParametresTab; // vector of parameters for each subproblem
 			vector<Population> populationTab; // vector of populations for each subproblem
 			Population* lastPop = NULL; // pointer to the last population, used to keep the penalty values
@@ -158,13 +159,14 @@ int main(int argc, char* argv[])
 			}
 
 			cout << endl;
-			return 0;
 		}
 	}
 	catch (const string& e)
 	{
 		cout << e << endl;
 		cout << endl;
-		return 0;
+		return -1;
 	}
+
+	return 0;
 }

@@ -130,8 +130,11 @@
     <ClCompile Include="Program\Client.cpp" />
     <ClCompile Include="Program\commandline.cpp" />
     <ClCompile Include="Program\CommandLineInterface.cpp" />
+    <ClCompile Include="Program\Data.cpp" />
     <ClCompile Include="Program\Genetic.cpp" />
     <ClCompile Include="Program\Individu.cpp" />
+    <ClCompile Include="Program\InputUser.cpp" />
+    <ClCompile Include="Program\Loader.cpp" />
     <ClCompile Include="Program\LocalSearch.cpp" />
     <ClCompile Include="Program\Main.cpp" />
     <ClCompile Include="Program\Noeud.cpp" />
@@ -145,14 +148,21 @@
     <ClInclude Include="Program\Client.h" />
     <ClInclude Include="Program\commandline.h" />
     <ClInclude Include="Program\CommandLineInterface.h" />
+    <ClInclude Include="Program\Edge.h" />
     <ClInclude Include="Program\Genetic.h" />
+    <ClInclude Include="Program\Data.h" />
     <ClInclude Include="Program\Individu.h" />
+    <ClInclude Include="Program\InputUser.h" />
+    <ClInclude Include="Program\Loader.h" />
     <ClInclude Include="Program\LocalSearch.h" />
+    <ClInclude Include="Program\Node.h" />
     <ClInclude Include="Program\Noeud.h" />
     <ClInclude Include="Program\Params.h" />
     <ClInclude Include="Program\Population.h" />
+    <ClInclude Include="Program\ProcessedData.h" />
     <ClInclude Include="Program\Route.h" />
     <ClInclude Include="Program\SeqData.h" />
+    <ClInclude Include="Program\Singleton.h" />
     <ClInclude Include="Program\Vehicle.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
