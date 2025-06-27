@@ -1,108 +1,98 @@
 /*  ---------------------------------------------------------------------- //
-    Hybrid Genetic Search for Arc Routing Problems -- HGS-CARP
-    Copyright (C) 2016 Thibaut VIDAL
+	Hybrid Genetic Search for Arc Routing Problems -- HGS-CARP
+	Copyright (C) 2016 Thibaut VIDAL
 
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
+	This program is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation, either version 3 of the License, or
+	(at your option) any later version.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	You should have received a copy of the GNU General Public License
+	along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //  ---------------------------------------------------------------------- */
 
-#ifndef NOEUD_H
-#define NOEUD_H
+#pragma once
 
-#include <iostream>
-using namespace std;
-class Route ;
-#include "Route.h"
+#include <vector>
+
+class Params;
+class SeqData;
+class Route;
 
 class Noeud
 {
+public:
+	// Access to the data of the problem
+	Params* params;
 
-public :
+	// is-it a depot
+	bool estUnDepot;
 
-// Access to the data of the problem
-Params * params ;
+	// index of the depot or customer
+	int cour;
 
-// is-it a depot
-bool estUnDepot ;
+	// place in the route
+	int place;
 
-// index of the depot or customer
-int cour ;
+	// index of the day in which this customer is inserted
+	int jour;
 
-// place in the route
-int place ;
+	// is this customer used on this day 
+	// (all customer nodes are created for each day, but not necessarily inserted in the sequence)
+	bool estPresent;
 
-// index of the day in which this customer is inserted
-int jour ;
+	// next depot or clients in the route
+	Noeud* suiv;
 
-// is this customer used on this day 
-// (all customer nodes are created for each day, but not necessarily inserted in the sequence)
-bool estPresent ;
+	// previous depot or clients in the route
+	Noeud* pred;
 
-// next depot or client in the route
-Noeud * suiv ;
+	// associated route
+	Route* route;
 
-// previous depot or client in the route
-Noeud * pred ;
+	// pointer towards the preprocessed SeqData data structures
+	// "i" is considered to be the current customer
+	std::vector<SeqData*> seqi_j; // data for (i,j) with j > i
+	std::vector<SeqData*> seqj_i; // data for (j,i) (for the same subsequence as i_j, but reversed)
+	SeqData* seq0_i; // data for (0,i)
+	SeqData* seqi_n; // data for (i,n), n is the end of the route
+	SeqData* seqi_0; // data for (i,0) (for the reversed route)
+	SeqData* seqn_i; // data for (n,i) (for the reversed route)
+	// the same pointers as (i,j) for some values, but simpler to call
+	SeqData* seq1; // data for (i) 
+	SeqData* seq12; // data for (i,i+1)
+	SeqData* seq21; // data for (i+1,i)
+	SeqData* seq123; // data for (i,i+1,i+2)
+	SeqData* seq321; // data for (i+2,i+1,i)
 
-// associated route
-Route * route ;
+	// cost of insertion in this day, if the considered customer had to be inserted
+	// This had to be generalized to the PCARP, as the demand may change as a function of the Pattern choice, the
+	// coutInsertion can be evaluated for all possible Pattern which contain this day.
+	std::vector<double> coutInsertion;
 
-// pointer towards the preprocessed SeqData data structures
-// "i" is considered to be the current customer
-vector <SeqData *> seqi_j ; // data for (i,j) with j > i
-vector <SeqData *> seqj_i ; // data for (j,i) (for the same subsequence as i_j, but reversed)
-SeqData * seq0_i ; // data for (0,i)
-SeqData * seqi_n ; // data for (i,n), n is the end of the route
-SeqData * seqi_0 ; // data for (i,0) (for the reversed route)
-SeqData * seqn_i ; // data for (n,i) (for the reversed route)
-// the same pointers as (i,j) for some values, but simpler to call
-SeqData * seq1 ; // data for (i) 
-SeqData * seq12 ; // data for (i,i+1)
-SeqData * seq21 ; // data for (i+1,i)
-SeqData * seq123 ; // data for (i,i+1,i+2)
-SeqData * seq321 ; // data for (i+2,i+1,i)
+	// place where it would be inserted
+	// This had to be generalized to the PCARP, as the demand may change as a function of the Pattern choice, the
+	// placeInsertion can be evaluated for all possible Pattern which contain this day.
+	std::vector<Noeud*> placeInsertion;
 
-// cost of insertion in this day, if the considered customer had to be inserted
-// This had to be generalized to the PCARP, as the demand may change as a function of the pattern choice, the
-// coutInsertion can be evaluated for all possible pattern which contain this day.
-vector < double > coutInsertion ;
+	// possible moves for this customer and this day (granular search)
+	std::vector<int> moves;
 
-// place where it would be inserted
-// This had to be generalized to the PCARP, as the demand may change as a function of the pattern choice, the
-// placeInsertion can be evaluated for all possible pattern which contain this day.
-vector < Noeud * > placeInsertion ;
+	Noeud(bool estUnDepot, int cour, int jour, bool estPresent, Noeud* suiv, Noeud* pred, Route* route, Params* params);
 
-// possible moves for this customer and this day (granular search)
-vector < int > moves ;
+	Noeud() = default;
 
-// constructor 1
-Noeud(void);
-	
-// constructor 2
-Noeud(bool estUnDepot, int cour, int jour, bool estPresent, Noeud * suiv , Noeud * pred, Route * route,Params * params);
+	// Copy constructor
+	Noeud(Noeud const& copy);
 
-// destructor
-~Noeud(void);
+	// Assignment operator in terms of the copy constructor
+	Noeud& operator=(Noeud const& copy);
 
-// Copy constructor
-Noeud(Noeud const& copy) ;
-
-// Assignment operator in terms of the copy constructor
-Noeud& operator=(Noeud const& copy);
-
-// little function to correctly initialize the pointers
-void setRemaining();
-
+	// little function to correctly initialize the pointers
+	void setRemaining();
 };
-
-#endif

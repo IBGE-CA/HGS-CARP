@@ -1,24 +1,34 @@
 #include "Population.h"
 
+#include <iostream>
+
+#include "Data.h"
+#include "CommandLineInterface.h"
+
+#include "Params.h"
+#include "LocalSearch.h"
+#include "Route.h"
+#include "SeqData.h"
+
+using namespace std;
+
 Population::Population(Params& params) : params(params)
 {
-	Individu * randomIndiv;
-	valides = new SousPop();
-	invalides = new SousPop();
-	valides->nbIndiv = 0;
-	invalides->nbIndiv = 0;
+	Individual* randomIndiv;
+	feasible.nbIndiv = 0;
+	unfeasible.nbIndiv = 0;
 	double temp, temp2;
 	bool feasibleFound = false;
 
 	// Create the trainer
-	trainer = new Individu(&params, true);
+	trainer = new Individual(&params, true);
 	delete trainer->localSearch;
 	trainer->localSearch = new LocalSearch(&params, trainer); // Initialize the LS structure
 
 	// Creating the initial populations
-	for (int i=0; i < params.mu && (!params.isSearchingFeasible || !feasibleFound); i++ )
+	for (int i = 0; i < params.mu && (!params.isSearchingFeasible || !feasibleFound); i++)
 	{
-		randomIndiv = new Individu(&params, true);
+		randomIndiv = new Individual(&params, true);
 		education(randomIndiv);
 		addIndividu(randomIndiv);
 		updateNbValides(randomIndiv);
@@ -29,7 +39,7 @@ Population::Population(Params& params) : params(params)
 			params.penalityCapa *= 10;
 			params.penalityLength *= 10;
 
-			trainer->recopieIndividu(trainer,randomIndiv);
+			trainer->recopieIndividu(trainer, randomIndiv);
 			trainer->generalSplit();
 			trainer->updateLS();
 			trainer->localSearch->runSearchTotal();
@@ -37,116 +47,101 @@ Population::Population(Params& params) : params(params)
 			params.penalityCapa = temp;
 			params.penalityLength = temp2;
 			trainer->generalSplit();
-			trainer->recopieIndividu(randomIndiv,trainer);
+			trainer->recopieIndividu(randomIndiv, trainer);
 			addIndividu(randomIndiv);
 		}
 		if (randomIndiv->estValide) feasibleFound = true;
 		delete randomIndiv;
 	}
 
-	for (int i=0; i < 50; i++ )
+	for (int i = 0; i < 50; i++)
 	{
-		if (i%2 == 0) listeValiditeCharge.push_back(true);
+		if (i % 2 == 0) listeValiditeCharge.push_back(true);
 		else listeValiditeCharge.push_back(false);
-		if (i%2 == 0) listeValiditeTemps.push_back(true);
+		if (i % 2 == 0) listeValiditeTemps.push_back(true);
 		else listeValiditeTemps.push_back(false);
 	}
 
 	temp = params.penalityCapa;
 	temp2 = params.penalityLength;
+
+	timeBest = 0;
 }
 
 Population::~Population()
 {
-	int size;
-	if (valides != NULL)  
-	{
-		size = (int)valides->individus.size();
-		for (int i=0; i < size; i++) delete valides->individus[i];
-		delete valides;
-	}
-
-	if (invalides != NULL)  
-	{
-		size = (int)invalides->individus.size();
-		for (int i=0; i < size; i++) delete invalides->individus[i];
-		delete invalides;
-	}
 	delete trainer;
 }
 
-void Population::evalExtFit(SousPop * pop)
+void Population::evalExtFit(const SubPopulation& subPop)
 {
 	int temp;
-	vector <int> classement;
-	vector <double> distances;
+	vector<int> classement;
+	vector<double> distances;
 
-	for (int i = 0; i < pop->nbIndiv; i++ )
+	for (int i = 0; i < subPop.nbIndiv; i++)
 	{
 		classement.push_back(i);
-		distances.push_back(pop->individus[i]->distPlusProche(params.nbCountDistMeasure));
+		distances.push_back(subPop.individuals[i]->distPlusProche(params.nbCountDistMeasure));
 	}
 
 	// Ranking the individuals in terms of contribution to diversity
-	for (int n = 0; n < pop->nbIndiv; n++ )
+	for (int n = 0; n < subPop.nbIndiv; n++)
 	{
-		for (int i = 0; i < pop->nbIndiv - n - 1; i++ )
+		for (int i = 0; i < subPop.nbIndiv - n - 1; i++)
 		{
-			if ( distances[classement[i]] < distances[classement[i+1]] - 0.000001 )
+			if (distances[classement[i]] < distances[classement[i + 1]] - 0.000001)
 			{
-				temp = classement[i+1];
-				classement[i+1] = classement[i];
+				temp = classement[i + 1];
+				classement[i + 1] = classement[i];
 				classement[i] = temp;
 			}
 		}
 	}
 
 	// Computing the biased fitness
-	for (int i = 0; i < pop->nbIndiv; i++ )
+	for (int i = 0; i < subPop.nbIndiv; i++)
 	{
-		pop->individus[classement[i]]->divRank = (float)i/(float)(pop->nbIndiv-1);
-		pop->individus[classement[i]]->fitRank = (float)classement[i]/(float)(pop->nbIndiv-1);
-		pop->individus[classement[i]]->fitnessEtendu = pop->individus[classement[i]]->fitRank + ((float)1.0-(float)params.el/(float)pop->nbIndiv) * pop->individus[classement[i]]->divRank;
+		subPop.individuals[classement[i]]->divRank = (float)i / (float)(subPop.nbIndiv - 1);
+		subPop.individuals[classement[i]]->fitRank = (float)classement[i] / (float)(subPop.nbIndiv - 1);
+		subPop.individuals[classement[i]]->fitnessEtendu = subPop.individuals[classement[i]]->fitRank + ((float)1.0 - (float)params.el / (float)subPop.nbIndiv) * subPop.individuals[classement[i]]->divRank;
 	}
 }
 
-int Population::addIndividu (Individu * indiv)
+int Population::addIndividu(Individual* indiv)
 {
-	SousPop * souspop;
+	SubPopulation& subPop = (indiv->estValide ? feasible : unfeasible);
 	int k, result;
 
-	if ( indiv->estValide ) souspop = valides;
-	else souspop = invalides;
-
-	result = placeIndividu(souspop,indiv);
+	result = placeIndividual(subPop, indiv);
 
 	// Keeping only the survivors if the maximum size of the population has been reached
-	if (result != -1 && souspop->nbIndiv > params.mu + params.lambda )
+	if (result != -1 && subPop.nbIndiv > params.mu + params.lambda)
 	{
-		while ( souspop->nbIndiv > params.mu)
+		while (subPop.nbIndiv > params.mu)
 		{
-			k = selectCompromis(souspop);
-			removeIndividu(souspop,k);
+			k = selectCompromis(subPop);
+			removeIndividual(subPop, k);
 		}
 	}
 	return result;
 }
 
-int Population::addAllIndividus (Population * pop)
+int Population::addAllIndividus(Population* pop)
 {
-	Individu * randomIndiv;
-	randomIndiv = new Individu(&params, 1.0);
+	Individual* randomIndiv;
+	randomIndiv = new Individual(&params, 1.0);
 
-	for (int i=0; i<pop->valides->nbIndiv; i++)
+	for (int i = 0; i < pop->feasible.nbIndiv; i++)
 	{
-		randomIndiv->recopieIndividu(randomIndiv,pop->valides->individus[i]);
+		randomIndiv->recopieIndividu(randomIndiv, pop->feasible.individuals[i]);
 		education(randomIndiv);
 		addIndividu(randomIndiv);
 	}
 
-	for (int i=0; i<pop->invalides->nbIndiv; i++)
+	for (int i = 0; i < pop->unfeasible.nbIndiv; i++)
 	{
-		randomIndiv->recopieIndividu(randomIndiv,pop->invalides->individus[i]); 
+		randomIndiv->recopieIndividu(randomIndiv, pop->unfeasible.individuals[i]);
 		education(randomIndiv);
 		addIndividu(randomIndiv);
 	}
@@ -155,58 +150,58 @@ int Population::addAllIndividus (Population * pop)
 	return 1;
 }
 
-void Population::updateProximity (SousPop * pop, Individu * indiv)
+void Population::updateProximity(const SubPopulation& subPop, Individual* indiv)
 {
-	for (int k=0; k < pop->nbIndiv; k++)
+	for (int k = 0; k < subPop.nbIndiv; k++)
 	{
-		if (pop->individus[k] != indiv) 
+		if (subPop.individuals[k] != indiv)
 		{
-			pop->individus[k]->addProche(indiv);
-			indiv->addProche(pop->individus[k]);
+			subPop.individuals[k]->addProche(indiv);
+			indiv->addProche(subPop.individuals[k]);
 		}
 	}
 }
 
-bool Population::fitExist ( SousPop * pop, Individu * indiv )
+bool Population::fitExist(const SubPopulation& subPop, Individual* indiv)
 {
 	int count = 0;
 	double distance = indiv->coutSol.evaluation;
-	for (int i=0; i < (int)pop->nbIndiv; i++ )
+	for (int i = 0; i < (int)subPop.nbIndiv; i++)
 	{
-		if (pop->individus[i]->coutSol.evaluation >= (distance - 0.01) && pop->individus[i]->coutSol.evaluation <= (distance + 0.01))
-			count ++;
+		if (subPop.individuals[i]->coutSol.evaluation >= (distance - 0.01) && subPop.individuals[i]->coutSol.evaluation <= (distance + 0.01))
+			count++;
 	}
 	if (count <= 1) return false;
 	else return true;
 }
 
-void Population::diversify ()
+void Population::diversify()
 {
-	Individu * randomIndiv;
+	Individual* randomIndiv;
 	double temp = params.penalityCapa;
 	double temp2 = params.penalityLength;
 
-	while ( valides->nbIndiv > (int)(0.3*(double)params.mu))
+	while (feasible.nbIndiv > (int)(0.3 * (double)params.mu))
 	{
-		delete valides->individus[valides->nbIndiv-1];
-		valides->individus.pop_back();
-		valides->nbIndiv --;
+		delete feasible.individuals[feasible.nbIndiv - 1];
+		feasible.individuals.pop_back();
+		feasible.nbIndiv--;
 	}
 
-	while ( invalides->nbIndiv > (int)(0.3*(double)params.mu))
+	while (unfeasible.nbIndiv > (int)(0.3 * (double)params.mu))
 	{
-		delete invalides->individus[invalides->nbIndiv-1];
-		invalides->individus.pop_back();
-		invalides->nbIndiv --;
+		delete unfeasible.individuals[unfeasible.nbIndiv - 1];
+		unfeasible.individuals.pop_back();
+		unfeasible.nbIndiv--;
 	}
 
-	for (int i=0; i < params.mu; i++ )
+	for (int i = 0; i < params.mu; i++)
 	{
-		randomIndiv = new Individu(&params, true);
+		randomIndiv = new Individual(&params, true);
 		education(randomIndiv);
 		addIndividu(randomIndiv);
 		updateNbValides(randomIndiv);
-		if (!randomIndiv->estValide) 
+		if (!randomIndiv->estValide)
 		{
 			temp = params.penalityCapa;
 			temp2 = params.penalityLength;
@@ -214,7 +209,7 @@ void Population::diversify ()
 			params.penalityCapa *= 50;
 			params.penalityLength *= 50;
 
-			trainer->recopieIndividu(trainer,randomIndiv);
+			trainer->recopieIndividu(trainer, randomIndiv);
 			trainer->generalSplit();
 			trainer->updateLS();
 			trainer->localSearch->runSearchTotal();
@@ -222,7 +217,7 @@ void Population::diversify ()
 			params.penalityCapa = temp;
 			params.penalityLength = temp2;
 			trainer->generalSplit();
-			trainer->recopieIndividu(randomIndiv,trainer);
+			trainer->recopieIndividu(randomIndiv, trainer);
 			addIndividu(randomIndiv);
 		}
 		delete randomIndiv;
@@ -231,123 +226,117 @@ void Population::diversify ()
 
 void Population::clear()
 {
-	while ( valides->nbIndiv > 0)
+	while (feasible.nbIndiv > 0)
 	{
-		delete valides->individus[valides->nbIndiv-1];
-		valides->individus.pop_back();
-		valides->nbIndiv --;
+		delete feasible.individuals[feasible.nbIndiv - 1];
+		feasible.individuals.pop_back();
+		feasible.nbIndiv--;
 	}
 
-	while ( invalides->nbIndiv > 0)
+	while (unfeasible.nbIndiv > 0)
 	{
-		delete invalides->individus[invalides->nbIndiv-1];
-		invalides->individus.pop_back();
-		invalides->nbIndiv --;
+		delete unfeasible.individuals[unfeasible.nbIndiv - 1];
+		unfeasible.individuals.pop_back();
+		unfeasible.nbIndiv--;
 	}
 }
 
-int Population::placeIndividu(SousPop * pop, Individu * indiv)
+int Population::placeIndividual(SubPopulation& subPop, Individual* indiv)
 {
-	Individu * monIndiv = new Individu(&params, false);
-	monIndiv->recopieIndividu (monIndiv , indiv);
+	Individual* monIndiv = new Individual(&params, false);
+	monIndiv->recopieIndividu(monIndiv, indiv);
 
 	bool placed = false;
-	int i = (int)pop->individus.size()-1;
-	pop->individus.push_back(monIndiv);
-	while ( i >= 0 && !placed )
+	int i = (int)subPop.individuals.size() - 1;
+	subPop.individuals.push_back(monIndiv);
+	while (i >= 0 && !placed)
 	{
-		if (pop->individus[i]->coutSol.evaluation >= indiv->coutSol.evaluation + 0.001 )
+		if (subPop.individuals[i]->coutSol.evaluation >= indiv->coutSol.evaluation + 0.001)
 		{
-			pop->individus[i+1] = pop->individus[i];
-			i --;
+			subPop.individuals[i + 1] = subPop.individuals[i];
+			i--;
 		}
 		else
 		{
-			pop->individus[i+1] = monIndiv;
+			subPop.individuals[i + 1] = monIndiv;
 			placed = true;
-			pop->nbIndiv ++;
-			updateProximity (pop, pop->individus[i+1]);
-			return i+1; // success
+			subPop.nbIndiv++;
+			updateProximity(subPop, subPop.individuals[i + 1]);
+			return i + 1; // success
 		}
 	}
 	if (!placed)
 	{
-		pop->individus[0] = monIndiv;
+		subPop.individuals[0] = monIndiv;
 		placed = true;
-		pop->nbIndiv ++;
-		updateProximity (pop, pop->individus[0]);
-		if (pop == valides) timeBest = clock();
+		subPop.nbIndiv++;
+		updateProximity(subPop, subPop.individuals[0]);
+		if (&subPop == &feasible) timeBest = clock();
 		return 0; // success
 	}
-	throw string ("erreur placeIndividu");
+	throw string("erreur placeIndividual");
 	return -3;
 }
 
-void Population::removeIndividu(SousPop * pop, int p)
+void Population::removeIndividual(SubPopulation& subPop, int p)
 {
-	Individu * partant = pop->individus[p];
+	Individual* partant = subPop.individuals[p];
 
 	// Placing the individual at the end
-	for ( int i=p+1; i < (int)pop->individus.size(); i++ )
-		pop->individus[i-1] = pop->individus[i];
+	for (int i = p + 1; i < (int)subPop.individuals.size(); i++)
+		subPop.individuals[i - 1] = subPop.individuals[i];
 
 	// Removing it from the population
-	pop->individus.pop_back();
-	pop->nbIndiv --;
+	subPop.individuals.pop_back();
+	subPop.nbIndiv--;
 
 	// Removing it from the proximity structures
-	for (int i=0; i < pop->nbIndiv; i++ )
-		pop->individus[i]->removeProche(partant);
+	for (int i = 0; i < subPop.nbIndiv; i++)
+		subPop.individuals[i]->removeProche(partant);
 
 	delete partant;
 }
 
-void Population::validatePen (SousPop * souspop)
+void Population::validatePen(SubPopulation& subPop)
 {
-	Individu * indiv;
-
 	// Updating Individual Evaluations
-	for (int i = 0; i < souspop->nbIndiv; i++)
-		souspop->individus[i]->coutSol.evaluation = souspop->individus[i]->coutSol.distance 
-		+ params.penalityCapa * souspop->individus[i]->coutSol.capacityViol
-		+ params.penalityLength * souspop->individus[i]->coutSol.lengthViol;
+	for (int i = 0; i < subPop.nbIndiv; i++)
+		subPop.individuals[i]->coutSol.evaluation = subPop.individuals[i]->coutSol.distance
+		+ params.penalityCapa * subPop.individuals[i]->coutSol.capacityViol
+		+ params.penalityLength * subPop.individuals[i]->coutSol.lengthViol;
 
-	for (int i = 0; i < souspop->nbIndiv; i++)
-	{
-		for (int j = 0; j < souspop->nbIndiv - i - 1; j++)
-		{
-			if (souspop->individus[j]->coutSol.evaluation >= souspop->individus[j+1]->coutSol.evaluation + 0.01 )
+	for (int i = 0; i < subPop.nbIndiv; i++)
+		for (int j = 0; j < subPop.nbIndiv - i - 1; j++)
+			if (subPop.individuals[j]->coutSol.evaluation >= subPop.individuals[j + 1]->coutSol.evaluation + 0.01)
 			{
-				indiv = souspop->individus[j];
-				souspop->individus[j] = souspop->individus[j+1];
-				souspop->individus[j+1] = indiv;
+				Individual* indiv = subPop.individuals[j];
+				subPop.individuals[j] = subPop.individuals[j + 1];
+				subPop.individuals[j + 1] = indiv;
 			}
-		}
-	}
 }
 
-Individu * Population::getIndividuBinT ()
+Individual* Population::getIndividuBinT()
 {
-	Individu * individu1;
-	Individu * individu2;
+	Individual* individu1;
+	Individual* individu2;
 	int place1, place2;
 
 	// Picking the first individual in the merge of both subpopulations
-	place1 = rand() % (valides->nbIndiv + invalides->nbIndiv);
-	if ( place1 >= valides->nbIndiv ) 
-		individu1 = invalides->individus[place1 - valides->nbIndiv];
-	else 
-		individu1 = valides->individus[place1];
+	place1 = rand() % (feasible.nbIndiv + unfeasible.nbIndiv);
+	if (place1 >= feasible.nbIndiv)
+		individu1 = unfeasible.individuals[place1 - feasible.nbIndiv];
+	else
+		individu1 = feasible.individuals[place1];
 
 	// Picking the second individual in the merge of both subpopulations
-	place2 = rand() % (valides->nbIndiv + invalides->nbIndiv);
-	if ( place2 >= valides->nbIndiv ) 
-		individu2 = invalides->individus[place2 - valides->nbIndiv];
-	else 
-		individu2 = valides->individus[place2];
+	place2 = rand() % (feasible.nbIndiv + unfeasible.nbIndiv);
+	if (place2 >= feasible.nbIndiv)
+		individu2 = unfeasible.individuals[place2 - feasible.nbIndiv];
+	else
+		individu2 = feasible.individuals[place2];
 
-	evalExtFit(valides);
-	evalExtFit(invalides);
+	evalExtFit(feasible);
+	evalExtFit(unfeasible);
 
 	// Keeping the best one
 	if (individu1->fitnessEtendu < individu2->fitnessEtendu)
@@ -356,53 +345,53 @@ Individu * Population::getIndividuBinT ()
 		return individu2;
 }
 
-Individu * Population::getIndividuPourc (int pourcentage)
+Individual* Population::getIndividuPourc(int pourcentage)
 {
 	int place;
 	// Picking the individual in the 25% best of the valide population, if there are individuals in this set
-	if ((valides->nbIndiv*pourcentage)/100 != 0)
+	if ((feasible.nbIndiv * pourcentage) / 100 != 0)
 	{
-		place = rand() % ((valides->nbIndiv*pourcentage)/100);
-		return valides->individus[place];
+		place = rand() % ((feasible.nbIndiv * pourcentage) / 100);
+		return feasible.individuals[place];
 	}
 	// Picking the individual in the 25% best of the invalide population, if there are individuals in this set
-	else if ((invalides->nbIndiv*pourcentage)/100 != 0)
+	else if ((unfeasible.nbIndiv * pourcentage) / 100 != 0)
 	{
-		place = rand() % ((invalides->nbIndiv*pourcentage)/100);
-		return invalides->individus[place];
+		place = rand() % ((unfeasible.nbIndiv * pourcentage) / 100);
+		return unfeasible.individuals[place];
 	}
 	else // If everything fails
 	{
-		throw string ("ERROR SELECTION POURC");
+		throw string("ERROR SELECTION POURC");
 		return NULL;
 	}
 }
 
-Individu * Population::getIndividuBestValide ()
+Individual* Population::getIndividuBestValide()
 {
-	if (valides->nbIndiv != 0) return valides->individus[0];
+	if (feasible.nbIndiv != 0) return feasible.individuals[0];
 	else return NULL;
 }
 
-Individu * Population::getIndividuBestInvalide ()
+Individual* Population::getIndividuBestInvalide()
 {
-	if (invalides->nbIndiv != 0) return invalides->individus[0];
+	if (unfeasible.nbIndiv != 0) return unfeasible.individuals[0];
 	else return NULL;
 }
 
-void Population::ExportBest (string nomFichier) 
+void Population::ExportBest(const string& nomFichier)
 {
-	vector <int> rout;
-	vector < vector < vector <int> > > allRoutes; 
-	vector < vector < vector < pair <int,int> > > > allRoutesArcs; 
-	allRoutes.push_back(vector < vector <int> > ());
-	allRoutesArcs.push_back(vector < vector <pair<int,int> > > ());
+	vector<int> rout;
+	vector<vector<vector<int>>> allRoutes;
+	vector<vector<vector<pair <int, int> > > > allRoutesArcs;
+	allRoutes.push_back(vector<vector<int>>());
+	allRoutesArcs.push_back(vector<vector<pair<int, int> > >());
 	int compteur;
-	Noeud * noeudActuel;
-	LocalSearch * loc;
+	Noeud* noeudActuel;
+	LocalSearch* loc;
 	ofstream myfile;
 	double temp, temp2;
-	Individu * bestValide = getIndividuBestValide ();
+	Individual* bestValide = getIndividuBestValide();
 
 	if (bestValide != NULL)
 	{
@@ -421,14 +410,14 @@ void Population::ExportBest (string nomFichier)
 		trainer->testPatternCorrectness();
 		if (!trainer->estValide || trainer->coutSol.lengthViol > 0.000001 || trainer->coutSol.capacityViol > 0.000001)
 			throw string("ERROR: Last individual became infeasible !!!!");
-		
+
 		// Opening the file to write the solution
 		myfile.open(nomFichier.data());
 		myfile.precision(10);
 		cout.precision(10);
-		
+
 		// Writing the distance
-		if (params.type != 35)
+		if (cli.type != Data::MM_kWRPP)
 		{
 			cout << "Writing the best solution : distance : " << trainer->coutSol.distance;
 			myfile << trainer->coutSol.distance << endl;
@@ -455,26 +444,26 @@ void Population::ExportBest (string nomFichier)
 
 		// Printing the total time of the run
 		// (we print the number of clock ticks to help for short runs, the user will do the proper conversion) 
-		myfile << (long long) clock() << endl;
+		myfile << (long long)clock() << endl;
 
 		// Printing the time to find the best solution
 		// (we print the number of clock ticks to help for short runs, the user will do the proper conversion) 
-		myfile << (long long) timeBest << endl;
+		myfile << (long long)timeBest << endl;
 
 		// Printing the routes and their content
-		for (int k=1; k <= params.nbDays; k++)
+		for (int k = 1; k <= cli.getNbDays(); k++)
 		{
 			compteur = 1;
-			allRoutes.push_back(vector < vector <int> > ());
-			allRoutesArcs.push_back(vector < vector <pair<int,int> > > ());
-			for (int i=0; i < params.nombreVehicules[k]; i++)
-			{	
+			allRoutes.push_back(vector<vector<int>>());
+			allRoutesArcs.push_back(vector<vector<pair<int, int> > >());
+			for (int i = 0; i < params.nombreVehicules[k]; i++)
+			{
 				// Test if the route is empty
 				if (!loc->routes[k][i].depot->suiv->estUnDepot)
 				{
 					// The route is not empty
 					// First, we pre-process again the data structures on the route with the flag "true", which allow to track back the orientation of the visits
-					loc->routes[k][i].updateRouteData(true); 
+					loc->routes[k][i].updateRouteData(true);
 					noeudActuel = loc->routes[k][i].depot->suiv;
 					rout.clear();
 					rout.push_back(loc->routes[k][i].depot->cour);
@@ -489,23 +478,23 @@ void Population::ExportBest (string nomFichier)
 					allRoutes[k].push_back(rout);
 					allRoutesArcs[k].push_back(loc->routes[k][i].depot->pred->seq0_i->bestCostArcs[0][0]);
 
-					if( loc->routes[k][i].depot->pred->seq0_i->bestCostArcs[0][0].size() != rout.size())
-						throw string ("Issue : mismatch between the route size and the number of arcs reported by the SeqData");
+					if (loc->routes[k][i].depot->pred->seq0_i->bestCostArcs[0][0].size() != rout.size())
+						throw string("Issue : mismatch between the route size and the number of arcs reported by the SeqData");
 
 					myfile << " " << loc->routes[k][i].depot->cour; // Printing the depot
-					myfile << " " << (k-1)%params.ancienNbDays + 1; // Printing the day
+					myfile << " " << (k - 1) % params.oldNbDays + 1; // Printing the day
 					myfile << " " << compteur; // Printing the index of the route
 					myfile << " " << loc->routes[k][i].depot->pred->seq0_i->load; // Printing the total demand
-					myfile << " " << loc->routes[k][i].depot->pred->seq0_i->evaluation(loc->routes[k][i].depot->pred->seq0_i,loc->routes[k][i].vehicle) << " "; // Printing the total cost of this route
-					
+					myfile << " " << loc->routes[k][i].depot->pred->seq0_i->evaluation(loc->routes[k][i].depot->pred->seq0_i, loc->routes[k][i].vehicle) << " "; // Printing the total cost of this route
+
 					myfile << " " << (int)rout.size(); // Printing the number of customers in the route
-					for (int j=0; j < (int)rout.size(); j++ ) // Printing the visits and their orientation
+					for (int j = 0; j < (int)rout.size(); j++) // Printing the visits and their orientation
 					{
-						if (params.deadheadingArcs && j > 0)
+						if (cli.deadheadingArcs && j > 0)
 						{
 							// Using the predecessors matrix to reconstruct the shortest path connecting the previous service to the current one
-							vector <int> temp;
-							int orig = loc->routes[k][i].depot->pred->seq0_i->bestCostArcs[0][0][j-1].second;
+							vector<int> temp;
+							int orig = loc->routes[k][i].depot->pred->seq0_i->bestCostArcs[0][0][j - 1].second;
 							int dest = loc->routes[k][i].depot->pred->seq0_i->bestCostArcs[0][0][j].first;
 							int curr = dest;
 							while (curr != orig)
@@ -513,21 +502,21 @@ void Population::ExportBest (string nomFichier)
 								temp.push_back(curr);
 								curr = params.ar_predNodes[orig][curr];
 							}
-							
+
 							// Printing the deadheading (travel) arcs in the shortest path, if any
 							if (!temp.empty())
 							{
 								temp.push_back(orig);
-								for (int n=(int)temp.size() - 1; n > 0; n-- )
+								for (int n = (int)temp.size() - 1; n > 0; n--)
 								{
 									myfile << " (T ";
 									myfile << temp[n] << ",";
-									myfile << temp[n-1] << ")";
+									myfile << temp[n - 1] << ")";
 								}
 							}
 						}
-						
-						if (rout[j] < params.nbDepots)
+
+						if (rout[j] < cli.nbDepots)
 							myfile << " (D ";
 						else
 							myfile << " (S ";
@@ -536,7 +525,7 @@ void Population::ExportBest (string nomFichier)
 						myfile << loc->routes[k][i].depot->pred->seq0_i->bestCostArcs[0][0][j].second << ")";
 					}
 					myfile << endl;
-					compteur ++;
+					compteur++;
 				}
 			}
 		}
@@ -544,10 +533,10 @@ void Population::ExportBest (string nomFichier)
 		myfile.close();
 
 		// Check the solution
-		if (!solutionChecker(allRoutes,allRoutesArcs,trainer->coutSol.distance,bestValide->maxRoute))
+		if (!solutionChecker(allRoutes, allRoutesArcs, trainer->coutSol.distance, bestValide->maxRoute))
 		{
 			// If the solution does not pass the checker, then we erase the file (we will detect when running the script that some results are missing)
-			for (int i=0; i < 10; i++)
+			for (int i = 0; i < 10; i++)
 				cout << "INFEASIBLE SOLUTION IN CHECKER -- ERASING SOLUTION !!!" << endl;
 			myfile.open(nomFichier.data(), std::ofstream::trunc);
 			myfile << "" << endl;
@@ -558,25 +547,25 @@ void Population::ExportBest (string nomFichier)
 	else
 	{
 		cout << "Impossible to find a feasible individual" << endl;
-		if (params.softConstraints)
+		if (cli.softConstraints)
 		{
 			cout << "Taking the best infeasible individual as solution since the soft constraints flag (-soft) is enabled" << endl;
-			
-			Individu * bestInvalide = getIndividuBestInvalide ();
-			
+
+			Individual* bestInvalide = getIndividuBestInvalide();
+
 			education(bestInvalide);
 			loc = trainer->localSearch;
 
 			// Little debugging tests before printing
 			trainer->testPatternCorrectness();
-			
+
 			// Opening the file to write the solution
 			myfile.open(nomFichier.data());
 			myfile.precision(10);
 			cout.precision(10);
-			
+
 			// Writing the distance
-			if (params.type != 35)
+			if (cli.type != Data::MM_kWRPP)
 			{
 				cout << "Writing the best solution : distance : " << trainer->coutSol.distance;
 				myfile << trainer->coutSol.distance << endl;
@@ -603,26 +592,26 @@ void Population::ExportBest (string nomFichier)
 
 			// Printing the total time of the run
 			// (we print the number of clock ticks to help for short runs, the user will do the proper conversion) 
-			myfile << (long long) clock() << endl;
+			myfile << (long long)clock() << endl;
 
 			// Printing the time to find the best solution
 			// (we print the number of clock ticks to help for short runs, the user will do the proper conversion) 
-			myfile << (long long) timeBest << endl;
+			myfile << (long long)timeBest << endl;
 
 			// Printing the routes and their content
-			for (int k=1; k <= params.nbDays; k++)
+			for (int k = 1; k <= cli.getNbDays(); k++)
 			{
 				compteur = 1;
-				allRoutes.push_back(vector < vector <int> > ());
-				allRoutesArcs.push_back(vector < vector <pair<int,int> > > ());
-				for (int i=0; i < params.nombreVehicules[k]; i++)
-				{	
+				allRoutes.push_back(vector<vector<int>>());
+				allRoutesArcs.push_back(vector<vector<pair<int, int> > >());
+				for (int i = 0; i < params.nombreVehicules[k]; i++)
+				{
 					// Test if the route is empty
 					if (!loc->routes[k][i].depot->suiv->estUnDepot)
 					{
 						// The route is not empty
 						// First, we pre-process again the data structures on the route with the flag "true", which allow to track back the orientation of the visits
-						loc->routes[k][i].updateRouteData(true); 
+						loc->routes[k][i].updateRouteData(true);
 						noeudActuel = loc->routes[k][i].depot->suiv;
 						rout.clear();
 						rout.push_back(loc->routes[k][i].depot->cour);
@@ -637,23 +626,23 @@ void Population::ExportBest (string nomFichier)
 						allRoutes[k].push_back(rout);
 						allRoutesArcs[k].push_back(loc->routes[k][i].depot->pred->seq0_i->bestCostArcs[0][0]);
 
-						if( loc->routes[k][i].depot->pred->seq0_i->bestCostArcs[0][0].size() != rout.size())
-							throw string ("Issue : mismatch between the route size and the number of arcs reported by the SeqData");
+						if (loc->routes[k][i].depot->pred->seq0_i->bestCostArcs[0][0].size() != rout.size())
+							throw string("Issue : mismatch between the route size and the number of arcs reported by the SeqData");
 
 						myfile << " " << loc->routes[k][i].depot->cour; // Printing the depot
-						myfile << " " << (k-1)%params.ancienNbDays + 1; // Printing the day
+						myfile << " " << (k - 1) % params.oldNbDays + 1; // Printing the day
 						myfile << " " << compteur; // Printing the index of the route
 						myfile << " " << loc->routes[k][i].depot->pred->seq0_i->load; // Printing the total demand
 						myfile << " " << loc->routes[k][i].depot->pred->seq0_i->bestCost00 << " "; // Printing the total cost of this route (without penalities)
-						
+
 						myfile << " " << (int)rout.size(); // Printing the number of customers in the route
-						for (int j=0; j < (int)rout.size(); j++ ) // Printing the visits and their orientation
+						for (int j = 0; j < (int)rout.size(); j++) // Printing the visits and their orientation
 						{
-							if (params.deadheadingArcs && j > 0)
+							if (cli.deadheadingArcs && j > 0)
 							{
 								// Using the predecessors matrix to reconstruct the shortest path connecting the previous service to the current one
-								vector <int> temp;
-								int orig = loc->routes[k][i].depot->pred->seq0_i->bestCostArcs[0][0][j-1].second;
+								vector<int> temp;
+								int orig = loc->routes[k][i].depot->pred->seq0_i->bestCostArcs[0][0][j - 1].second;
 								int dest = loc->routes[k][i].depot->pred->seq0_i->bestCostArcs[0][0][j].first;
 								int curr = dest;
 								while (curr != orig)
@@ -661,21 +650,21 @@ void Population::ExportBest (string nomFichier)
 									temp.push_back(curr);
 									curr = params.ar_predNodes[orig][curr];
 								}
-								
+
 								// Printing the deadheading (travel) arcs in the shortest path, if any
 								if (!temp.empty())
 								{
 									temp.push_back(orig);
-									for (int n=(int)temp.size() - 1; n > 0; n-- )
+									for (int n = (int)temp.size() - 1; n > 0; n--)
 									{
 										myfile << " (T ";
 										myfile << temp[n] << ",";
-										myfile << temp[n-1] << ")";
+										myfile << temp[n - 1] << ")";
 									}
 								}
 							}
-							
-							if (rout[j] < params.nbDepots)
+
+							if (rout[j] < cli.nbDepots)
 								myfile << " (D ";
 							else
 								myfile << " (S ";
@@ -684,7 +673,7 @@ void Population::ExportBest (string nomFichier)
 							myfile << loc->routes[k][i].depot->pred->seq0_i->bestCostArcs[0][0][j].second << ")";
 						}
 						myfile << endl;
-						compteur ++;
+						compteur++;
 					}
 				}
 			}
@@ -694,7 +683,7 @@ void Population::ExportBest (string nomFichier)
 	}
 }
 
-bool Population::solutionChecker(vector < vector < vector < int > > > & allRoutes, vector < vector < vector < pair <int,int > > > > & allRoutesArcs, double expectedCost, double expectedMaxRoute)
+bool Population::solutionChecker(const vector<vector<vector<int>>>& allRoutes, const vector<vector<vector<pair<int, int>>>>& allRoutesArcs, double expectedCost, double expectedMaxRoute)
 {
 	double totalCost = 0;
 	double routeCost;
@@ -705,60 +694,60 @@ bool Population::solutionChecker(vector < vector < vector < int > > > & allRoute
 	// Verify that all customers are serviced
 	// For the PCARP, it will also compute the patterns of the deliveries and verify that its correct.
 	// This is done in a first step.
-	vector <int> currentPatterns = vector <int> (params.nbDepots + params.nbClients);
-	for (int d=1; d <= params.nbDays; d++)
+	vector<int> currentPatterns = vector<int>(cli.nbDepots + params.nbClients);
+	for (int d = 1; d <= cli.getNbDays(); d++)
 	{
-		for (int r=0; r < (int)allRoutes[d].size(); r++)
+		for (int r = 0; r < (int)allRoutes[d].size(); r++)
 		{
-			for (int i=1; i < (int)allRoutes[d][r].size() - 1; i++ )
+			for (int i = 1; i < (int)allRoutes[d][r].size() - 1; i++)
 			{
-				currentPatterns[allRoutes[d][r][i]] += (int)pow(2.0,params.nbDays-d);
+				currentPatterns[allRoutes[d][r][i]] += (int)pow(2.0, cli.getNbDays() - d);
 			}
 		}
 	}
 
 	bool existsOneFeasiblePattern;
-	for (int i = params.nbDepots; i < params.nbDepots + params.nbClients; i++)
+	for (int i = cli.nbDepots; i < cli.nbDepots + params.nbClients; i++)
 	{
 		existsOneFeasiblePattern = false;
-		for (int p=0; p < (int)params.cli[i].visits.size(); p++)
+		for (int p = 0; p < (int)params.clients[i].visits.size(); p++)
 		{
-			if (params.cli[i].visits[p].pat == currentPatterns[i] || (params.type == 33 && currentPatterns[i] > 0))
+			if (params.clients[i].visits[p].pat == currentPatterns[i] || (cli.type == Data::MDCARP && currentPatterns[i] > 0))
 				existsOneFeasiblePattern = true;
 		}
 		if (!existsOneFeasiblePattern)
 		{
-			cout << "SOLUTION CHECKER: Infeasible pattern" << endl;
+			cout << "SOLUTION CHECKER: Infeasible Pattern" << endl;
 			return false;
 		}
 	}
 
 	// Verification of the load constraints
-	for (int d=1; d <= params.nbDays; d++)
+	for (int d = 1; d <= cli.getNbDays(); d++)
 	{
-		for (int r=0; r < (int)allRoutes[d].size(); r++)
+		for (int r = 0; r < (int)allRoutes[d].size(); r++)
 		{
 			// For each route
-			if (allRoutes[d][r][0] >= params.nbDepots)
+			if (allRoutes[d][r][0] >= cli.nbDepots)
 			{
 				cout << "SOLUTION CHECKER: No depot at beginning of route" << endl;
 				return false;
 			}
 
-			if (allRoutes[d][r][allRoutes[d][r].size()-1] >= params.nbDepots)
+			if (allRoutes[d][r][allRoutes[d][r].size() - 1] >= cli.nbDepots)
 			{
 				cout << "SOLUTION CHECKER: No depot at end of route" << endl;
 				return false;
 			}
 
 			totalLoad = 0;
-			for (int i=0; i < (int)allRoutes[d][r].size(); i++ )
+			for (int i = 0; i < (int)allRoutes[d][r].size(); i++)
 			{
 				cour = allRoutes[d][r][i];
-				if (params.type != 33)
-					totalLoad += params.cli[cour].demandPatDay[currentPatterns[cour]][d];
+				if (cli.type != Data::MDCARP)
+					totalLoad += params.clients[cour].demandPatDay[currentPatterns[cour]][d];
 				else
-					totalLoad += params.cli[cour].demandPatDay[1][1];
+					totalLoad += params.clients[cour].demandPatDay[1][1];
 			}
 			if (totalLoad < 0)
 			{
@@ -776,33 +765,33 @@ bool Population::solutionChecker(vector < vector < vector < int > > > & allRoute
 
 	// Verification of the solution cost
 	// If its the MM-kWRPP, we verify the cost of the longest route
-	for (int d=1; d <= params.nbDays; d++)
+	for (int d = 1; d <= cli.getNbDays(); d++)
 	{
-		for (int r=0; r < (int)allRoutes[d].size(); r++)
+		for (int r = 0; r < (int)allRoutes[d].size(); r++)
 		{
 			// For each route, sum the distances (case of the CARP)
 			routeCost = 0;
-			
-			if (!params.isTurnPenalties) // Case without turn penalties (using distances between nodes)
+
+			if (!params.hasTurnPenalties) // Case without turn penalties (using distances between nodes)
 			{
-			for (int i=0; i < (int)allRoutesArcs[d][r].size()-1; i++ )
-				routeCost += params.ar_distanceNodes[allRoutesArcs[d][r][i].second][allRoutesArcs[d][r][i+1].first];
-			} 
+				for (int i = 0; i < (int)allRoutesArcs[d][r].size() - 1; i++)
+					routeCost += params.ar_distanceNodes[allRoutesArcs[d][r][i].second][allRoutesArcs[d][r][i + 1].first];
+			}
 			else                          // Case with turn penalties (using distances in the line graph)
 			{
-				for (int i=0; i < (int)allRoutesArcs[d][r].size()-1; i++ )
+				for (int i = 0; i < (int)allRoutesArcs[d][r].size() - 1; i++)
 				{
-					Arc * arc1 = params.cli[allRoutes[d][r][i]].getArc(allRoutesArcs[d][r][i].first,allRoutesArcs[d][r][i].second);
-					Arc * arc2 = params.cli[allRoutes[d][r][i+1]].getArc(allRoutesArcs[d][r][i+1].first,allRoutesArcs[d][r][i+1].second);
+					Arc* arc1 = params.clients[allRoutes[d][r][i]].getArc(allRoutesArcs[d][r][i].first, allRoutesArcs[d][r][i].second);
+					Arc* arc2 = params.clients[allRoutes[d][r][i + 1]].getArc(allRoutesArcs[d][r][i + 1].first, allRoutesArcs[d][r][i + 1].second);
 					routeCost += params.ar_distanceArcs[arc1->indexArc][arc2->indexArc];
 				}
 			}
-			for (int i=0; i < (int)allRoutesArcs[d][r].size(); i++ )
+			for (int i = 0; i < (int)allRoutesArcs[d][r].size(); i++)
 			{
-				if (allRoutesArcs[d][r][i].first == params.cli[allRoutes[d][r][i]].ar_nodesExtr0)
-					routeCost += params.cli[allRoutes[d][r][i]].ar_serviceCost01;
+				if (allRoutesArcs[d][r][i].first == params.clients[allRoutes[d][r][i]].ar_nodesExtr0)
+					routeCost += params.clients[allRoutes[d][r][i]].ar_serviceCost01;
 				else
-					routeCost += params.cli[allRoutes[d][r][i]].ar_serviceCost10;
+					routeCost += params.clients[allRoutes[d][r][i]].ar_serviceCost10;
 			}
 			if (routeCost > maxRouteLength) // Updating the maximum route cost
 				maxRouteLength = routeCost;
@@ -810,7 +799,7 @@ bool Population::solutionChecker(vector < vector < vector < int > > > & allRoute
 		}
 	}
 
-	if ((params.type != 35 && totalCost != expectedCost) || (params.type == 35 && maxRouteLength != expectedMaxRoute))
+	if ((cli.type != Data::MM_kWRPP && totalCost != expectedCost) || (cli.type == Data::MM_kWRPP && maxRouteLength != expectedMaxRoute))
 	{
 		cout << "SOLUTION CHECKER: Cost is not correct" << endl;
 		return false;
@@ -819,10 +808,10 @@ bool Population::solutionChecker(vector < vector < vector < int > > > & allRoute
 	return true; // Success
 }
 
-void Population::ExportBKS (string nomFichier) 
+void Population::ExportBKS(const string& nomFichier)
 {
 	double fit;
-	int secondValue; 
+	int secondValue;
 	ifstream fichier;
 
 	fichier.open(nomFichier.c_str());
@@ -831,150 +820,150 @@ void Population::ExportBKS (string nomFichier)
 		fichier >> fit;
 		fichier >> secondValue;
 		fichier.close();
-		
+
 		// Testing if the best solution is better than the BKS
 		// If the problem is a classic CVRP, CARP, MDCARP which seeks to optimize the distance 
-		if (params.type != 32 && params.type != 35 && getIndividuBestValide () != NULL && getIndividuBestValide()->coutSol.evaluation < fit - 0.001)
+		if (cli.type != Data::PCARP && cli.type != Data::MM_kWRPP && getIndividuBestValide() != NULL && getIndividuBestValide()->coutSol.evaluation < fit - 0.001)
 		{
-			cout << "!!! New BKS !!! : distance = " << getIndividuBestValide()->coutSol.evaluation << " " <<  endl;
-			ExportBest (nomFichier);
+			cout << "!!! New BKS !!! : distance = " << getIndividuBestValide()->coutSol.evaluation << " " << endl;
+			ExportBest(nomFichier);
 		}
 		// If its a PCARP, main objective is fleet size, and then distance counts
-		else if (params.type == 32 && getIndividuBestValide () != NULL && (getIndividuBestValide()->nbRoutes < secondValue || (getIndividuBestValide()->nbRoutes == secondValue && getIndividuBestValide()->coutSol.evaluation < fit - 0.001)))
+		else if (cli.type == Data::PCARP && getIndividuBestValide() != NULL && (getIndividuBestValide()->nbRoutes < secondValue || (getIndividuBestValide()->nbRoutes == secondValue && getIndividuBestValide()->coutSol.evaluation < fit - 0.001)))
 		{
-			cout << "!!! New BKS !!! : fleet size = " << getIndividuBestValide()->nbRoutes << " | distance = " << getIndividuBestValide()->coutSol.evaluation << " " <<  endl;
-			ExportBest (nomFichier);
+			cout << "!!! New BKS !!! : fleet size = " << getIndividuBestValide()->nbRoutes << " | distance = " << getIndividuBestValide()->coutSol.evaluation << " " << endl;
+			ExportBest(nomFichier);
 		}
-		else if (params.type == 35 && getIndividuBestValide () != NULL && getIndividuBestValide()->maxRoute < secondValue - 0.001)
+		else if (cli.type == Data::MM_kWRPP && getIndividuBestValide() != NULL && getIndividuBestValide()->maxRoute < secondValue - 0.001)
 		{
 			cout << "!!! New BKS !!! : maximum route size = " << getIndividuBestValide()->maxRoute << endl;
-			ExportBest (nomFichier);
+			ExportBest(nomFichier);
 		}
 	}
-	else 
+	else
 	{
 		cout << " No best known solution (BKS) file has been found, creating a new file " << endl;
-		ExportBest (nomFichier);
+		ExportBest(nomFichier);
 	}
 }
 
-double Population::fractionValidesCharge ()
-{ 
+double Population::fractionValidesCharge()
+{
 	int count = 0;
-	for ( list<bool>::iterator it = listeValiditeCharge.begin(); it != listeValiditeCharge.end(); ++it )
-		if (*it == true) count ++;
+	for (list<bool>::iterator it = listeValiditeCharge.begin(); it != listeValiditeCharge.end(); ++it)
+		if (*it == true) count++;
 
-	return double(count)/50.;
+	return double(count) / 50.;
 }
 
-double Population::fractionValidesTemps ()
-{ 
+double Population::fractionValidesTemps()
+{
 	int count = 0;
-	for ( list<bool>::iterator it = listeValiditeTemps.begin(); it != listeValiditeTemps.end(); ++it )
-		if (*it == true) count ++;
+	for (list<bool>::iterator it = listeValiditeTemps.begin(); it != listeValiditeTemps.end(); ++it)
+		if (*it == true) count++;
 
-	return double(count)/50.;
+	return double(count) / 50.;
 }
 
-double Population::getDiversity(SousPop * pop)
+double Population::getDiversity(const SubPopulation& subPop)
 {
 	double total = 0;
 	int count = 0;
-	for ( int i=0; i < min(pop->nbIndiv,params.mu); i++ )
+	for (int i = 0; i < min(subPop.nbIndiv, params.mu); i++)
 	{
-		for (int j=i+1; j < min(pop->nbIndiv,params.mu); j++ )
+		for (int j = i + 1; j < min(subPop.nbIndiv, params.mu); j++)
 		{
-			total += pop->individus[i]->distance(pop->individus[j]);
-			count ++;
+			total += subPop.individuals[i]->distance(subPop.individuals[j]);
+			count++;
 		}
 	}
 	return total / (double)count;
-} 
-
-double Population::getMoyenneValides ()
-{
-	double moyenne = 0;
-	for (int i=0; i < min(valides->nbIndiv,params.mu); i ++)
-		moyenne += valides->individus[i]->coutSol.evaluation;
-	return  moyenne / min(valides->nbIndiv,params.mu);
 }
 
-double Population::getMoyenneInvalides ()
+double Population::getMoyenneValides()
 {
 	double moyenne = 0;
-	for (int i=0; i <  min(invalides->nbIndiv,params.mu); i ++)
-		moyenne += invalides->individus[i]->coutSol.evaluation;
-	return  moyenne / min(invalides->nbIndiv,params.mu);
+	for (int i = 0; i < min(feasible.nbIndiv, params.mu); i++)
+		moyenne += feasible.individuals[i]->coutSol.evaluation;
+	return  moyenne / min(feasible.nbIndiv, params.mu);
 }
 
-double Population::getAgeValides ()
+double Population::getMoyenneInvalides()
+{
+	double moyenne = 0;
+	for (int i = 0; i < min(unfeasible.nbIndiv, params.mu); i++)
+		moyenne += unfeasible.individuals[i]->coutSol.evaluation;
+	return  moyenne / min(unfeasible.nbIndiv, params.mu);
+}
+
+double Population::getAgeValides()
 {
 	double ageMoyen = 0;
-	for (int i=0; i < min(valides->nbIndiv,params.mu); i ++)
-		ageMoyen += valides->individus[i]->age;
-	return  ageMoyen / min(valides->nbIndiv,params.mu);
+	for (int i = 0; i < min(feasible.nbIndiv, params.mu); i++)
+		ageMoyen += feasible.individuals[i]->age;
+	return  ageMoyen / min(feasible.nbIndiv, params.mu);
 }
 
-int Population::selectCompromis (SousPop * souspop)
+int Population::selectCompromis(const SubPopulation& subPop)
 {
 	// Selects one individual to be eliminated from the population
-	vector <int> classement;
+	vector<int> classement;
 	int temp, sortant;
 
-	updateAge ();
-	evalExtFit(souspop);
+	updateAge();
+	evalExtFit(subPop);
 
-	for (int i=0; i < souspop->nbIndiv; i++)
+	for (int i = 0; i < subPop.nbIndiv; i++)
 		classement.push_back(i);
 
 	// Adding a penalty in case of clone (in the objective space or solution space)
-	for (int i=1; i < souspop->nbIndiv; i++)
+	for (int i = 1; i < subPop.nbIndiv; i++)
 	{
-		if (souspop->individus[i]->distPlusProche(1) <= 0.001 ) // in solution space
-			souspop->individus[i]->fitnessEtendu += 5;
-		if (fitExist(souspop,souspop->individus[i])) // in objective space
-			souspop->individus[i]->fitnessEtendu += 5;	
+		if (subPop.individuals[i]->distPlusProche(1) <= 0.001) // in solution space
+			subPop.individuals[i]->fitnessEtendu += 5;
+		if (fitExist(subPop, subPop.individuals[i])) // in objective space
+			subPop.individuals[i]->fitnessEtendu += 5;
 	}
 
 	// Ranking the elements per extended fitness and selecting out the worst
-	for (int n = 0; n < souspop->nbIndiv; n++ )
+	for (int n = 0; n < subPop.nbIndiv; n++)
 	{
-		for (int i = 0; i < souspop->nbIndiv - n - 1; i++ )
+		for (int i = 0; i < subPop.nbIndiv - n - 1; i++)
 		{
-			if ( souspop->individus[classement[i]]->fitnessEtendu > souspop->individus[classement[i+1]]->fitnessEtendu )
+			if (subPop.individuals[classement[i]]->fitnessEtendu > subPop.individuals[classement[i + 1]]->fitnessEtendu)
 			{
-				temp = classement[i+1];
-				classement[i+1] = classement[i];
+				temp = classement[i + 1];
+				classement[i + 1] = classement[i];
 				classement[i] = temp;
 			}
 		}
 	}
 
-	sortant = classement[souspop->nbIndiv-1];
+	sortant = classement[subPop.nbIndiv - 1];
 	return sortant;
 }
 
-void Population::updateAge ()
+void Population::updateAge()
 {
-	for (int i=0; i < valides->nbIndiv; i++)
-		valides->individus[i]->age ++ ;
+	for (int i = 0; i < feasible.nbIndiv; i++)
+		feasible.individuals[i]->age++;
 
-	for (int i=0; i < invalides->nbIndiv; i++)
-		invalides->individus[i]->age ++ ;
+	for (int i = 0; i < unfeasible.nbIndiv; i++)
+		unfeasible.individuals[i]->age++;
 }
 
-void Population::education(Individu * indiv)
-{	
-	indiv->recopieIndividu(trainer,indiv);
+void Population::education(Individual* indiv)
+{
+	indiv->recopieIndividu(trainer, indiv);
 	trainer->generalSplit();
 	trainer->updateLS();
 	trainer->localSearch->runSearchTotal();
 	trainer->updateIndiv();
-	indiv->recopieIndividu(indiv,trainer);
+	indiv->recopieIndividu(indiv, trainer);
 }
 
-void Population::updateNbValides (Individu * indiv)
-{		
+void Population::updateNbValides(Individual* indiv)
+{
 	listeValiditeCharge.push_back(indiv->coutSol.capacityViol < 0.001);
 	listeValiditeCharge.pop_front();
 	listeValiditeTemps.push_back(indiv->coutSol.lengthViol < 0.001);
@@ -988,24 +977,24 @@ void Population::afficheEtat(int nbIter)
 
 	cout << "It " << nbIter << " | Sol ";
 
-	if (getIndividuBestValide () != NULL)
-		cout << getIndividuBestValide()->coutSol.distance << " " << getIndividuBestValide()->coutSol.routes << " " ;
+	if (getIndividuBestValide() != NULL)
+		cout << getIndividuBestValide()->coutSol.distance << " " << getIndividuBestValide()->coutSol.routes << " ";
 	else
 		cout << "NO-VALID ";
 
-	if (getIndividuBestInvalide () != NULL)
+	if (getIndividuBestInvalide() != NULL)
 		cout << getIndividuBestInvalide()->coutSol.evaluation;
 	else
 		cout << "NO-INVALID";
 
 	cout << " | Moy " << getMoyenneValides() << " " << getMoyenneInvalides()
-		<< " | Div " << getDiversity(valides) << " " << getDiversity(invalides) << endl
+		<< " | Div " << getDiversity(feasible) << " " << getDiversity(unfeasible) << endl
 		<< " | Val " << fractionValidesCharge() << " " << fractionValidesTemps()
 		<< " | Pen " << params.penalityCapa << " " << params.penalityLength
-		<< " | Pop " << valides->nbIndiv << " " << invalides->nbIndiv;
+		<< " | Pop " << feasible.nbIndiv << " " << unfeasible.nbIndiv;
 	if (getIndividuBestInvalide() != NULL && getIndividuBestValide() == NULL)
 		cout << " | Feas : distance " << getIndividuBestInvalide()->coutSol.distance
-		<< " duration " << getIndividuBestInvalide()->coutSol.lengthViol 
+		<< " duration " << getIndividuBestInvalide()->coutSol.lengthViol
 		<< " load " << getIndividuBestInvalide()->coutSol.capacityViol;
 	cout << endl;
 	//cout << " | Age Valides : " << getAgeValides() << endl;

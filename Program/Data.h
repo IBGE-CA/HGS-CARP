@@ -13,6 +13,17 @@ class Data : public Singleton<Data>
 {
 	friend class Singleton<Data>;
 public:
+	enum Type
+	{
+		CARP,
+		MDCARP,
+		PCARP,
+		NEARP,
+		NEARP_TP,
+		MM_kWRPP,
+		NoType,
+	};
+
 	int capacity = 0;
 	int vehicles = 0;
 

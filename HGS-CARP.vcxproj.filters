@@ -36,9 +36,6 @@
     <ClCompile Include="Program\Genetic.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Program\Individu.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Program\LocalSearch.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -78,15 +75,18 @@
     <ClCompile Include="Program\InputUser.cpp">
       <Filter>Source Files\input</Filter>
     </ClCompile>
+    <ClCompile Include="Program\Individual.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Program\ProcessedData.cpp">
+      <Filter>Source Files\input</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Program\Client.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Program\Genetic.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Program\Individu.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Program\LocalSearch.h">
@@ -136,6 +136,12 @@
     </ClInclude>
     <ClInclude Include="Program\ProcessedData.h">
       <Filter>Header Files\input</Filter>
+    </ClInclude>
+    <ClInclude Include="Program\Individual.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Program\FloydWarshall.h">
+      <Filter>Header Files\util</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

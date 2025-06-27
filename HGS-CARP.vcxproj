@@ -132,7 +132,7 @@
     <ClCompile Include="Program\CommandLineInterface.cpp" />
     <ClCompile Include="Program\Data.cpp" />
     <ClCompile Include="Program\Genetic.cpp" />
-    <ClCompile Include="Program\Individu.cpp" />
+    <ClCompile Include="Program\Individual.cpp" />
     <ClCompile Include="Program\InputUser.cpp" />
     <ClCompile Include="Program\Loader.cpp" />
     <ClCompile Include="Program\LocalSearch.cpp" />
@@ -140,6 +140,7 @@
     <ClCompile Include="Program\Noeud.cpp" />
     <ClCompile Include="Program\Params.cpp" />
     <ClCompile Include="Program\Population.cpp" />
+    <ClCompile Include="Program\ProcessedData.cpp" />
     <ClCompile Include="Program\Route.cpp" />
     <ClCompile Include="Program\SeqData.cpp" />
     <ClCompile Include="Program\Vehicle.cpp" />
@@ -149,9 +150,10 @@
     <ClInclude Include="Program\commandline.h" />
     <ClInclude Include="Program\CommandLineInterface.h" />
     <ClInclude Include="Program\Edge.h" />
+    <ClInclude Include="Program\FloydWarshall.h" />
     <ClInclude Include="Program\Genetic.h" />
     <ClInclude Include="Program\Data.h" />
-    <ClInclude Include="Program\Individu.h" />
+    <ClInclude Include="Program\Individual.h" />
     <ClInclude Include="Program\InputUser.h" />
     <ClInclude Include="Program\Loader.h" />
     <ClInclude Include="Program\LocalSearch.h" />

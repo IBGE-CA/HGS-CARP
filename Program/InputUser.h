@@ -10,6 +10,7 @@ class InputUser
 {
 public:
 	InputUser();
+	InputUser(const InputUser& other);
 	virtual ~InputUser() = default;
 
 	void setSilent(bool value);
@@ -19,7 +20,7 @@ protected:
 	const ProcessedData& pd;
 	const CommandLineInterface& cli;
 
-	bool is_silent;
+	bool isSilent;
 	std::ostream out;
 
 private:

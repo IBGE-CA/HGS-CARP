@@ -1,19 +1,15 @@
 #pragma once
 
-#include <stdlib.h>
-#include <stdio.h> 
+#include "InputUser.h"
+
 #include <vector>
-#include <list>
-#include <math.h>
 
-#include "Population.h"
-#include "Params.h"
-#include "Individu.h"
-#include "time.h"
+class Population;
+class Individual;
+class Params;
 
-class Genetic
+class Genetic : public InputUser
 {
-
 private:
 
 	// number of iterations without improvement (during the execution of the HGA)
@@ -36,12 +32,12 @@ public:
 	// working individuals (for the local search and crossover)
 	// to work on some solutions we first create a copy in this kind of individuals
 	// because the individual used for storage in the population do not contain all search data structures
-	Individu* rejeton;
-	Individu* rejeton2;
-	Individu* rejetonP1;
-	Individu* rejetonP2;
-	Individu* rejetonBestFound;
-	Individu* rejetonBestFoundAll;
+	Individual* rejeton;
+	Individual* rejeton2;
+	Individual* rejetonP1;
+	Individual* rejetonP2;
+	Individual* rejetonBestFound;
+	Individual* rejetonBestFoundAll;
 
 	// Pointer towards the parameters of the problem
 	Params* params;
@@ -65,7 +61,7 @@ public:
 	void crossPIX();
 
 	// temporary structures used in the crossover
-	vector < int > freqClient;
+	std::vector<int> freqClient;
 
 	// regular management of the penalty coefficients
 	void gererPenalites();
@@ -73,6 +69,5 @@ public:
 	// Constructor
 	Genetic(Params* params, Population* population, clock_t ticks, bool traces);
 
-	// Destructor
-	~Genetic(void);
+	~Genetic();
 };

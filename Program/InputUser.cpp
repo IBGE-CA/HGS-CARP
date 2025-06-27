@@ -10,10 +10,15 @@ using namespace std;
 
 InputUser::InputUser() : data(Data::getInstance()), pd(ProcessedData::getInstance()), cli(CommandLineInterface::getInstance()), out(&null)
 {
-	setSilent(is_silent = cli.silent);
+	setSilent(isSilent = cli.silent);
+}
+
+InputUser::InputUser(const InputUser& other) : data(Data::getInstance()), pd(ProcessedData::getInstance()), cli(CommandLineInterface::getInstance()), out(&null)
+{
+	setSilent(isSilent = other.isSilent);
 }
 
 void InputUser::setSilent(bool value)
 {
-	out.rdbuf((is_silent = value) ? &null : cout.rdbuf());
+	out.rdbuf((isSilent = value) ? &null : cout.rdbuf());
 }

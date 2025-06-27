@@ -18,24 +18,28 @@
 
 #include "Client.h"
 
-void Client::computeVisitsDyn (int nbDays, int ancienNbDays) 
+#include <iostream>
+
+using namespace std;
+
+void Client::computeVisitsDyn (int nbDays, int oldNbDays) 
 {
 	visitsDyn.clear();
 
 	// structure initialisations
-	for (int i=0 ; i <= (int)pow((float)2,ancienNbDays) ; i++)
+	for (int i=0 ; i <= (int)pow((float)2,oldNbDays) ; i++)
 		visitsDyn.push_back(-1);
 
-	for (int i=0 ; i < (int)visits.size()*ancienNbDays/nbDays ; i++)
+	for (int i=0 ; i < (int)visits.size()*oldNbDays/nbDays ; i++)
 		visitsDyn[visits[i].pat] = i ;
 }
 
-void Client::computeJourSuiv (int nbDays, int ancienNbDays) 
+void Client::computeJourSuiv (int nbDays, int oldNbDays) 
 {
 	int day,day2,j ;
-	vector < int > temp ;
-	vector < int > temp2 ;
-	vector <double> tempDbl = vector <double> (nbDays+1) ;
+	vector<int> temp ;
+	vector<int> temp2 ;
+	vector<double> tempDbl = vector<double> (nbDays+1) ;
 	for (int i=0 ; i < nbDays+1 ; i++) 
 		tempDbl[i] = 0.;
 
@@ -43,10 +47,10 @@ void Client::computeJourSuiv (int nbDays, int ancienNbDays)
 
 	// initialisation  of computeJourSuiv
 	temp.push_back(-1);
-	for (int i=0 ; i < ancienNbDays ; i++)
+	for (int i=0 ; i < oldNbDays ; i++)
 	{temp.push_back(0);}
 
-	for (int i=0 ; i <= (int)pow((float)2,ancienNbDays) ; i++)
+	for (int i=0 ; i <= (int)pow((float)2,oldNbDays) ; i++)
 	{
 		jourSuiv.push_back(temp);
 		demandPatDay.push_back(tempDbl);
@@ -57,17 +61,17 @@ void Client::computeJourSuiv (int nbDays, int ancienNbDays)
 	for (int i=0 ; i < (int)visits.size() ; i++)
 	{
 		codeTravail = visits[i].pat ;
-		frec ((int)codeTravail,(int)0,(int)pow((float)2,ancienNbDays),ancienNbDays) ;
+		frec ((int)codeTravail,(int)0,(int)pow((float)2,oldNbDays),oldNbDays) ;
 	}
 
 	// we replace the 0 and 1 by the data on which is the next day where we can add this task
-	for (int k=0 ; k <= (int)pow((float)2,ancienNbDays) ; k++)
+	for (int k=0 ; k <= (int)pow((float)2,oldNbDays) ; k++)
 	{
 		if (jourSuiv[k][0] != -1)
 		{
 			// we go from right to left to find the first non-0 element
 			day = 0 ;
-			j = ancienNbDays ;
+			j = oldNbDays ;
 			while ( day == 0 )
 			{
 				if (jourSuiv[k][j] == 1) 
@@ -90,7 +94,7 @@ void Client::computeJourSuiv (int nbDays, int ancienNbDays)
 				j-- ;
 			}
 
-			for ( j = day2 + 1 ; j <= ancienNbDays ; j++ )
+			for ( j = day2 + 1 ; j <= oldNbDays ; j++ )
 			{
 				jourSuiv[k][j] = day ;
 			}
@@ -99,28 +103,28 @@ void Client::computeJourSuiv (int nbDays, int ancienNbDays)
 
 	// Here we fill the structure "DemandDayPat"
 	// If it was a single day problem, the demand per day is simply the demand of the customer
-	if (ancienNbDays == 1) 
+	if (oldNbDays == 1) 
 	{
-		for (int k=1 ; k < (int)pow((float)2,ancienNbDays) ; k++)
+		for (int k=1 ; k < (int)pow((float)2,oldNbDays) ; k++)
 			for (int kk = 1 ; kk <= nbDays ; kk++)
 				demandPatDay[k][kk] = demand ;
 	}
-	else // Case of the PCARP, the demand per day depends on the choice of pattern 
+	else // Case of the PCARP, the demand per day depends on the choice of Pattern 
 	{
 		int firstNonZero ;
 		int tempPat ;
 		int tempIndex ;
 		double tempLoad ;
-		vector <int> dayVisits = vector <int> (ancienNbDays+1) ;
+		vector<int> dayVisits = vector<int> (oldNbDays+1) ;
 		if (this->custNum != 0)
 		{
-			for (int k=1 ; k < (int)pow((float)2,ancienNbDays) ; k++)
+			for (int k=1 ; k < (int)pow((float)2,oldNbDays) ; k++)
 			{
-				// For this pattern, compute the visits over the week.
+				// For this Pattern, compute the visits over the week.
 				tempPat = k ;
-				for (int kk = 0 ; kk < ancienNbDays ; kk++)
+				for (int kk = 0 ; kk < oldNbDays ; kk++)
 				{
-					dayVisits[ancienNbDays - kk] = tempPat%2 ;
+					dayVisits[oldNbDays - kk] = tempPat%2 ;
 					tempPat = tempPat/2 ;
 				}
 
@@ -131,9 +135,9 @@ void Client::computeJourSuiv (int nbDays, int ancienNbDays)
 
 				// And then we will loop in a circular way, starting from the next day
 				tempLoad = 0. ;
-				for (int kk = 0 ; kk < ancienNbDays ; kk++)
+				for (int kk = 0 ; kk < oldNbDays ; kk++)
 				{
-					tempIndex = 1 + (firstNonZero + kk)%ancienNbDays ;
+					tempIndex = 1 + (firstNonZero + kk)%oldNbDays ;
 					tempLoad += demand ; // We cumulate the daily demand
 					if (dayVisits[tempIndex] == 1)
 					{
@@ -147,23 +151,23 @@ void Client::computeJourSuiv (int nbDays, int ancienNbDays)
 
 				// Finally, the first visit of the week needs to take care of the load of the week-end (two additional days)
 				// Only to be added to the PCARP
-				if (ancienNbDays > 1)
+				if (oldNbDays > 1)
 					demandPatDay[k][firstNonZero] += 2*demand ;
 			}
 		}
 	}
 }
 
-bool Client::testPat (int pattern, int ancienNbDays)
+bool Client::testPat (int Pattern, int oldNbDays)
 {
 	int calcul1, calcul2 ;
 	bool concorde ;
 	for (int i=0 ; i < (int)visits.size() ; i++)
 	{
-		calcul1 = pattern ;
+		calcul1 = Pattern ;
 		calcul2 = visits[i].pat ;
 		concorde = true ;
-		for (int k = 0 ; k < ancienNbDays ; k++)
+		for (int k = 0 ; k < oldNbDays ; k++)
 		{
 			if ((calcul1 % 2) > (calcul2 % 2)) 
 				concorde = false ;
@@ -175,37 +179,37 @@ bool Client::testPat (int pattern, int ancienNbDays)
 	return false ;
 }
 
-void Client::frec (int y, int z,int n, int ancienNbDays) 
+void Client::frec (int y, int z,int n, int oldNbDays) 
 {
 	if (n > y) 
 	{ 
-		frec (y,z,n/2,ancienNbDays) ;
+		frec (y,z,n/2,oldNbDays) ;
 	}
 	else 
 	{
 		if (y!=0)
 		{
-			frec(y-n,z,n/2,ancienNbDays);
-			frec(y-n,z+n,n/2,ancienNbDays);
+			frec(y-n,z,n/2,oldNbDays);
+			frec(y-n,z+n,n/2,oldNbDays);
 		}
 		else
 		{
-			ajoute(z,(int)codeTravail-z,ancienNbDays);
+			ajoute(z,(int)codeTravail-z,oldNbDays);
 		}
 	}
 }
 
-void Client::ajoute (int y, int z, int ancienNbDays)
+void Client::ajoute (int y, int z, int oldNbDays)
 {
 	int temp = z ;
 	if (temp !=0)
 	{
 		jourSuiv[y][0] = 0 ;
-		for (int i=0 ; i < ancienNbDays ; i++)
+		for (int i=0 ; i < oldNbDays ; i++)
 		{
-			if (jourSuiv[y][ancienNbDays-i] == 0) 
+			if (jourSuiv[y][oldNbDays-i] == 0) 
 			{ 
-				jourSuiv[y][ancienNbDays-i] = temp%2 ; 
+				jourSuiv[y][oldNbDays-i] = temp%2 ; 
 			}
 			temp = temp/2 ;
 		}
