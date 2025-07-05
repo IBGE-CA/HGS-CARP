@@ -1,0 +1,81 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Header Files\input">
+      <UniqueIdentifier>{8c0bd4cf-8632-4df9-a705-34001122a9c9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\input">
+      <UniqueIdentifier>{4ab1f3e6-dfea-469b-a76e-5efd5953bb08}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\util">
+      <UniqueIdentifier>{9a566cb4-bb11-41b6-8600-00950c95ea4c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\algorithm">
+      <UniqueIdentifier>{5bbd2e21-bb88-462e-8ad3-e582f868917c}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="source\Link.h">
+      <Filter>Header Files\input</Filter>
+    </ClInclude>
+    <ClInclude Include="source\Node.h">
+      <Filter>Header Files\input</Filter>
+    </ClInclude>
+    <ClInclude Include="source\Service.h">
+      <Filter>Header Files\input</Filter>
+    </ClInclude>
+    <ClInclude Include="source\Loader.h">
+      <Filter>Header Files\input</Filter>
+    </ClInclude>
+    <ClInclude Include="source\Data.h">
+      <Filter>Header Files\input</Filter>
+    </ClInclude>
+    <ClInclude Include="source\Singleton.h">
+      <Filter>Header Files\util</Filter>
+    </ClInclude>
+    <ClInclude Include="source\CommandLineInterface.h">
+      <Filter>Header Files\input</Filter>
+    </ClInclude>
+    <ClInclude Include="source\InputUser.h">
+      <Filter>Header Files\input</Filter>
+    </ClInclude>
+    <ClInclude Include="source\ProcessedData.h">
+      <Filter>Header Files\input</Filter>
+    </ClInclude>
+    <ClInclude Include="source\FloydWarshall.h">
+      <Filter>Header Files\util</Filter>
+    </ClInclude>
+    <ClInclude Include="source\Algorithm.h">
+      <Filter>Header Files\algorithm</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="source\Loader.cpp">
+      <Filter>Source Files\input</Filter>
+    </ClCompile>
+    <ClCompile Include="source\CommandLineInterface.cpp">
+      <Filter>Source Files\input</Filter>
+    </ClCompile>
+    <ClCompile Include="source\InputUser.cpp">
+      <Filter>Source Files\input</Filter>
+    </ClCompile>
+    <ClCompile Include="source\ProcessedData.cpp">
+      <Filter>Source Files\input</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Data.cpp">
+      <Filter>Source Files\input</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>
