@@ -14,7 +14,7 @@ int main(int argc, char* argv[])
 {
 	try
 	{
-		CommandLineInterface cli = CommandLineInterface::getInstance();
+		BaseParameters cli = BaseParameters::getInstance();
 		if (!cli.load(argc, argv)) return -1;
 
 		/* CLASSIC CASE OF OPTIMIZATION, BASED ON DISTANCE : for the CVRP, CARP, NEARP, MDCARP... */

@@ -25,57 +25,69 @@
     <Filter Include="Header Files\algorithm">
       <UniqueIdentifier>{5bbd2e21-bb88-462e-8ad3-e582f868917c}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\util">
+      <UniqueIdentifier>{4859b9ca-8a55-438b-88fc-e4cd450fe99e}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="source\Link.h">
-      <Filter>Header Files\input</Filter>
-    </ClInclude>
-    <ClInclude Include="source\Node.h">
-      <Filter>Header Files\input</Filter>
-    </ClInclude>
-    <ClInclude Include="source\Service.h">
-      <Filter>Header Files\input</Filter>
-    </ClInclude>
-    <ClInclude Include="source\Loader.h">
-      <Filter>Header Files\input</Filter>
-    </ClInclude>
-    <ClInclude Include="source\Data.h">
-      <Filter>Header Files\input</Filter>
-    </ClInclude>
-    <ClInclude Include="source\Singleton.h">
-      <Filter>Header Files\util</Filter>
-    </ClInclude>
-    <ClInclude Include="source\CommandLineInterface.h">
-      <Filter>Header Files\input</Filter>
-    </ClInclude>
-    <ClInclude Include="source\InputUser.h">
-      <Filter>Header Files\input</Filter>
-    </ClInclude>
-    <ClInclude Include="source\ProcessedData.h">
-      <Filter>Header Files\input</Filter>
-    </ClInclude>
-    <ClInclude Include="source\FloydWarshall.h">
-      <Filter>Header Files\util</Filter>
-    </ClInclude>
-    <ClInclude Include="source\Algorithm.h">
+    <ClInclude Include="Algorithm.h">
       <Filter>Header Files\algorithm</Filter>
     </ClInclude>
+    <ClInclude Include="BaseInputUser.h">
+      <Filter>Header Files\input</Filter>
+    </ClInclude>
+    <ClInclude Include="BaseParameters.h">
+      <Filter>Header Files\input</Filter>
+    </ClInclude>
+    <ClInclude Include="BaseProcessedData.h">
+      <Filter>Header Files\input</Filter>
+    </ClInclude>
+    <ClInclude Include="CommandLineInterface.h">
+      <Filter>Header Files\util</Filter>
+    </ClInclude>
+    <ClInclude Include="CommandLineOption.h">
+      <Filter>Header Files\util</Filter>
+    </ClInclude>
+    <ClInclude Include="FloydWarshall.h">
+      <Filter>Header Files\util</Filter>
+    </ClInclude>
+    <ClInclude Include="Data.h">
+      <Filter>Header Files\input</Filter>
+    </ClInclude>
+    <ClInclude Include="Link.h">
+      <Filter>Header Files\input</Filter>
+    </ClInclude>
+    <ClInclude Include="Loader.h">
+      <Filter>Header Files\input</Filter>
+    </ClInclude>
+    <ClInclude Include="Node.h">
+      <Filter>Header Files\input</Filter>
+    </ClInclude>
+    <ClInclude Include="Service.h">
+      <Filter>Header Files\input</Filter>
+    </ClInclude>
+    <ClInclude Include="Singleton.h">
+      <Filter>Header Files\util</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="source\Loader.cpp">
+    <ClCompile Include="BaseInputUser.cpp">
       <Filter>Source Files\input</Filter>
     </ClCompile>
-    <ClCompile Include="source\CommandLineInterface.cpp">
+    <ClCompile Include="BaseParameters.cpp">
       <Filter>Source Files\input</Filter>
     </ClCompile>
-    <ClCompile Include="source\InputUser.cpp">
+    <ClCompile Include="BaseProcessedData.cpp">
       <Filter>Source Files\input</Filter>
     </ClCompile>
-    <ClCompile Include="source\ProcessedData.cpp">
+    <ClCompile Include="Data.cpp">
       <Filter>Source Files\input</Filter>
     </ClCompile>
-    <ClCompile Include="source\Data.cpp">
+    <ClCompile Include="Loader.cpp">
       <Filter>Source Files\input</Filter>
+    </ClCompile>
+    <ClCompile Include="CommandLineInterface.cpp">
+      <Filter>Source Files\util</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

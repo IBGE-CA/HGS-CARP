@@ -10,6 +10,29 @@
       <Platform>x64</Platform>
     </ProjectConfiguration>
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Algorithm.h" />
+    <ClInclude Include="BaseInputUser.h" />
+    <ClInclude Include="BaseParameters.h" />
+    <ClInclude Include="BaseProcessedData.h" />
+    <ClInclude Include="CommandLineInterface.h" />
+    <ClInclude Include="CommandLineOption.h" />
+    <ClInclude Include="Data.h" />
+    <ClInclude Include="FloydWarshall.h" />
+    <ClInclude Include="Link.h" />
+    <ClInclude Include="Loader.h" />
+    <ClInclude Include="Node.h" />
+    <ClInclude Include="Service.h" />
+    <ClInclude Include="Singleton.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="BaseInputUser.cpp" />
+    <ClCompile Include="BaseParameters.cpp" />
+    <ClCompile Include="BaseProcessedData.cpp" />
+    <ClCompile Include="CommandLineInterface.cpp" />
+    <ClCompile Include="Data.cpp" />
+    <ClCompile Include="Loader.cpp" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
@@ -43,19 +66,23 @@
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <TargetName>$(ProjectName)</TargetName>
+  </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <Lib>
-      <OutputFile>$(OutDir)$(TargetName)d$(TargetExt)</OutputFile>
+      <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
     </Lib>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -66,6 +93,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -74,26 +102,6 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
   </ItemDefinitionGroup>
-  <ItemGroup>
-    <ClInclude Include="source\Algorithm.h" />
-    <ClInclude Include="source\CommandLineInterface.h" />
-    <ClInclude Include="source\Data.h" />
-    <ClInclude Include="source\FloydWarshall.h" />
-    <ClInclude Include="source\InputUser.h" />
-    <ClInclude Include="source\Link.h" />
-    <ClInclude Include="source\Loader.h" />
-    <ClInclude Include="source\Node.h" />
-    <ClInclude Include="source\ProcessedData.h" />
-    <ClInclude Include="source\Service.h" />
-    <ClInclude Include="source\Singleton.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="source\CommandLineInterface.cpp" />
-    <ClCompile Include="source\Data.cpp" />
-    <ClCompile Include="source\InputUser.cpp" />
-    <ClCompile Include="source\Loader.cpp" />
-    <ClCompile Include="source\ProcessedData.cpp" />
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

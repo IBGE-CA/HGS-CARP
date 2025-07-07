@@ -7,7 +7,7 @@
 #include "Vehicle.h"
 
 class Data;
-class CommandLineInterface;
+class BaseParameters;
 
 class Params;
 
@@ -24,7 +24,7 @@ class Params
 public:
 	const Data& data;
 
-	const CommandLineInterface& cli;
+	const BaseParameters& cli;
 	/* ------------------------- PROBLEM DATA -------------------------- */
 
 	// random seed
@@ -166,7 +166,7 @@ public:
 	void setMethodParams();
 
 	// get the data from the stream
-	void loadData(const CommandLineInterface& cli);
+	void loadData(const BaseParameters& cli);
 	void ar_parseOtherLinesCARP(); // some sub-procedures when reading the various instance formats
 	void ar_parseOtherLinesNEARP();
 	void ar_computeDistancesNodes();

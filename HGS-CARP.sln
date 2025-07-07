@@ -12,6 +12,17 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "carp-hgs", "carp-hgs\carp-h
 		{262E7F39-DF6F-4DED-A0C8-307D28FE6399} = {262E7F39-DF6F-4DED-A0C8-307D28FE6399}
 	EndProjectSection
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "carp-one", "carp-one\carp-one.vcxproj", "{FD6CD922-DC39-46E0-897A-499210B2DEAD}"
+	ProjectSection(ProjectDependencies) = postProject
+		{262E7F39-DF6F-4DED-A0C8-307D28FE6399} = {262E7F39-DF6F-4DED-A0C8-307D28FE6399}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "carp-main", "carp-main\carp-main.vcxproj", "{24078505-B583-484B-8EA3-64B206A8CC68}"
+	ProjectSection(ProjectDependencies) = postProject
+		{262E7F39-DF6F-4DED-A0C8-307D28FE6399} = {262E7F39-DF6F-4DED-A0C8-307D28FE6399}
+		{FD6CD922-DC39-46E0-897A-499210B2DEAD} = {FD6CD922-DC39-46E0-897A-499210B2DEAD}
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -25,9 +36,16 @@ Global
 		{437B50B9-8CF4-4454-A08B-E0FB8F9848E3}.Debug|x64.ActiveCfg = Debug|x64
 		{437B50B9-8CF4-4454-A08B-E0FB8F9848E3}.Release|x64.ActiveCfg = Release|x64
 		{F7A2668A-C60D-4B37-AF8A-9A6416B67F77}.Debug|x64.ActiveCfg = Debug|x64
-		{F7A2668A-C60D-4B37-AF8A-9A6416B67F77}.Debug|x64.Build.0 = Debug|x64
 		{F7A2668A-C60D-4B37-AF8A-9A6416B67F77}.Release|x64.ActiveCfg = Release|x64
 		{F7A2668A-C60D-4B37-AF8A-9A6416B67F77}.Release|x64.Build.0 = Release|x64
+		{FD6CD922-DC39-46E0-897A-499210B2DEAD}.Debug|x64.ActiveCfg = Debug|x64
+		{FD6CD922-DC39-46E0-897A-499210B2DEAD}.Debug|x64.Build.0 = Debug|x64
+		{FD6CD922-DC39-46E0-897A-499210B2DEAD}.Release|x64.ActiveCfg = Release|x64
+		{FD6CD922-DC39-46E0-897A-499210B2DEAD}.Release|x64.Build.0 = Release|x64
+		{24078505-B583-484B-8EA3-64B206A8CC68}.Debug|x64.ActiveCfg = Debug|x64
+		{24078505-B583-484B-8EA3-64B206A8CC68}.Debug|x64.Build.0 = Debug|x64
+		{24078505-B583-484B-8EA3-64B206A8CC68}.Release|x64.ActiveCfg = Release|x64
+		{24078505-B583-484B-8EA3-64B206A8CC68}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

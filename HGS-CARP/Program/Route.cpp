@@ -28,7 +28,7 @@ using namespace std;
 
 Route::Route(int cour, Node* depot, Vehicle* vehicle, Params* params, Individual* indiv, int day) : params(params), individu(indiv), cour(cour), day(day), depot(depot), vehicle(vehicle)
 {
-	const CommandLineInterface cli = CommandLineInterface::getBuilt();
+	const BaseParameters cli = BaseParameters::getBuilt();
 
 	for (int i = 0; i < params->nbClients + cli.nbDepots; i++)
 	{
@@ -162,7 +162,7 @@ void Route::updateRouteData(bool isForPrinting)
 // no insertion are computed
 void Route::initiateInsertions()
 {
-	const CommandLineInterface cli = CommandLineInterface::getBuilt();
+	const BaseParameters cli = BaseParameters::getBuilt();
 	for (int i = 0; i < params->nbClients + cli.nbDepots; i++)
 		for (int p = 0; p < (int)params->clients[i].visits.size(); p++)
 			coutInsertionClient[i][p] = 1.e30;

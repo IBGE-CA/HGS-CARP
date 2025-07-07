@@ -56,7 +56,7 @@ struct EC_element
 };
 
 // Local Search class
-class LocalSearch : public InputUser
+class LocalSearch : public BaseInputUser
 {
 private:
 	// acces to the data of the problem

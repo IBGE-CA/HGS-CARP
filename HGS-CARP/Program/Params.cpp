@@ -26,7 +26,7 @@
 
 using namespace std;
 
-Params::Params(bool isSearchingFeasible) : cli(CommandLineInterface::getInstance()), data(Data::getInstance())
+Params::Params(bool isSearchingFeasible) : cli(BaseParameters::getInstance()), data(Data::getInstance())
 {
 	// Main constructor of Params
 	borne = 2.0;
@@ -74,7 +74,7 @@ void Params::setMethodParams()
 		mu = 5; lambda = 5; el = 1; minValides = 0.6; maxValides = 0.7;
 }
 
-void Params::loadData(const CommandLineInterface& cli)
+void Params::loadData(const BaseParameters& cli)
 {
 	// Main method to read a problem instance
 	vector<Vehicle> tempI;

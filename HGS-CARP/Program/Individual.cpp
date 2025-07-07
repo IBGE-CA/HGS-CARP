@@ -172,7 +172,7 @@ void Individual::recopieIndividu(Individual* destination, Individual* source)
 
 void Individual::shakingSwap(int nbShak)
 {
-	const CommandLineInterface& cli = CommandLineInterface::getBuilt();
+	const BaseParameters& cli = BaseParameters::getBuilt();
 
 	// only used in the ILS
 	int itShak = 0;
@@ -205,7 +205,7 @@ Individual::~Individual()
 
 void Individual::generalSplit()
 {
-	const CommandLineInterface& cli = CommandLineInterface::getBuilt();
+	const BaseParameters& cli = BaseParameters::getBuilt();
 
 	solutionCost.evaluation = 0;
 	solutionCost.capacityViol = 0;
@@ -387,7 +387,7 @@ void Individual::splitLF(int k)
 
 void Individual::measureSol()
 {
-	const CommandLineInterface& cli = CommandLineInterface::getBuilt();
+	const BaseParameters& cli = BaseParameters::getBuilt();
 
 	int j;
 	nbRoutes = 0;
@@ -449,7 +449,7 @@ void Individual::initPot(int day)
 
 void Individual::updateLS()
 {
-	const CommandLineInterface& cli = CommandLineInterface::getBuilt();
+	const BaseParameters& cli = BaseParameters::getBuilt();
 
 	// Loading the local search structures
 	// Warning, Split must have been computed before
@@ -546,7 +546,7 @@ void Individual::updateLS()
 
 void Individual::updateIndiv()
 {
-	const CommandLineInterface& cli = CommandLineInterface::getBuilt();
+	const BaseParameters& cli = BaseParameters::getBuilt();
 
 	// Now, we go through the LS structure to update the individual (its chromosomes)
 	int pos;
@@ -579,7 +579,7 @@ void Individual::updateIndiv()
 
 void Individual::testPatternCorrectness()
 {
-	const CommandLineInterface& cli = CommandLineInterface::getBuilt();
+	const BaseParameters& cli = BaseParameters::getBuilt();
 
 	// Little test for debugging (test that all visits are correct for each customer)
 	vector<int> frequencies;
@@ -616,7 +616,7 @@ void Individual::testPatternCorrectness()
 
 double Individual::distance(Individual* indiv2)
 {
-	const CommandLineInterface& cli = CommandLineInterface::getBuilt();
+	const BaseParameters& cli = BaseParameters::getBuilt();
 
 	// Hamming distance
 	bool isIdentical;
@@ -647,7 +647,7 @@ double Individual::distance(Individual* indiv2)
 
 void Individual::computeSuccessors()
 {
-	const CommandLineInterface& cli = CommandLineInterface::getBuilt();
+	const BaseParameters& cli = BaseParameters::getBuilt();
 
 	int jj;
 	for (int i = 0; i < cli.nbDepots + params->nbClients; i++)
